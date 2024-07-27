@@ -17,7 +17,8 @@ function C=apply_odometry_correction(X, U)
 	C=zeros(size(U,1),3);
 	for i=1:size(U,1),
 		u=U(i,1:3)';
-		uc=;
+        #given the bias parameters return unbiased odometry
+		uc=X*u;
 		C(i,:)=uc;
 	end
 end
