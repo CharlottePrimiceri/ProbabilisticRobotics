@@ -1,4 +1,3 @@
-%put also there the ground truth trajectory?
 %show the uncalibrated and calibrated odometry? 
 close all
 clear
@@ -8,7 +7,7 @@ source "../tools/utilities/geometry_helpers_2d.m"
 source "../04-Calibration/odometry_trajectory.m"
 disp('loading the matrix');
 path = 'dataset.txt';
-% Read dataset.... transform then into function
+# Read dataset.... transform then into function
 function odometry=read_odometry(path)
         file = fopen(path, 'r');
 
@@ -33,14 +32,13 @@ function odometry=read_odometry(path)
 endfunction
 
 U = read_odometry(path);
+#compute the ground truth trajectory
 T = odometry_trajectory(U(:,1:3));
 disp('ground truth');
 hold on;
 plot(T(:,1),T(:,2), 'r-', 'linewidth', 2);
 pause(10);
 
-%Z=load('/home/charlotte/Documents/ProbabilisticRobotics/04-Calibration/dataset.txt');
-%addpath('/home/charlotte/Documents/ProbabilisticRobotics/04-Calibration');
 
 #compute the ground truth trajectory
 #TrueTrajectory=odometry_trajectory(Z(:,1:3));

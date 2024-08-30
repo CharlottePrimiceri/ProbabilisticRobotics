@@ -1,4 +1,5 @@
 source "../tools/utilities/geometry_helpers_2d.m"
+
 function A = v2t(v)
     % This function converts a vector to a transformation matrix
     A = [cos(v(3)), -sin(v(3)), v(1);
@@ -9,6 +10,7 @@ end
 function v = t2v(T)
     v = [T(1,3), T(2,3), atan2(T(2,1), T(1,1))];
 end
+
 #U: matrix contains odometry, it provides the incremental changes in the robot's position and orientation at each time step.
 
 #defining function to compute trajectory T (so the absolute position and orientation)
