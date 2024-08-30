@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-f = open("dataset.txt")
+f = open("04-Calibration/dataset.txt")
 
 lines = f.read().splitlines()
 
