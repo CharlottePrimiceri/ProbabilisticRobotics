@@ -13,6 +13,7 @@
 - Position of the Laser w.r.t. the base link:
 
   translation: [1.5, 0, 0]
+  
   rotation: [0, 0, 0, 1]
   
 For a certain time step we have:
