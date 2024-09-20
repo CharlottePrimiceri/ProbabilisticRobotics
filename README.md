@@ -15,6 +15,7 @@
   - Steer Offset: correction on the direction of the front wheel in order to go forward (zero angle)
     
 - Position of the Laser w.r.t. the base link:
+  
   translation: [1.5, 0, 0]
   
   rotation: [0, 0, 0, 1]
