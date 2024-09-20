@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-f = open("04-Calibration/dataset.txt")
+f = open("dataset.txt")
 
 lines = f.read().splitlines()
 
@@ -9,7 +9,7 @@ x = []
 y = []
 for l in lines:
 	c += 1
-	if(c < 10):
+	if(c < 9):
 		continue
 	tokens = l.split(":")
 	tracker_pose = tokens[-1].strip()
