@@ -8,6 +8,11 @@ source "../04-Calibration/odometry_trajectory.m"
 disp('loading the matrix');
 path = 'dataset.txt';
 # Read dataset.... transform then into function
+
+#initial guess [x y theta psi]
+initial_state = [0 0 0 0];
+
+
 function odometry=read_odometry(path)
         file = fopen(path, 'r');
 
@@ -31,22 +36,33 @@ function odometry=read_odometry(path)
         end    
 endfunction
 
+function incr_encoder=eliminate_overflow()
+
+#if the previous value of tick is greater than the next one there is overflow, so write the change in
+#ticks as joints_max_enc_values - previous_tick_value + new_tick_value
+#otherwhise leave the normal difference
+
+endfunction
+
+
 U = read_odometry(path);
 disp(U)
 #compute the ground truth trajectory
-T = odometry_trajectory(U(:,4:6));
-disp('ground truth');
-hold on;
-plot(T(:,1),T(:,2), 'r-', 'linewidth', 2);
-pause(10);
+#T = odometry_trajectory(U(:,4:6));
+#disp('ground truth');
+#hold on;
+#plot(T(:,1),T(:,2), 'r-', 'linewidth', 2);
+#pause(10);
 
 
 #compute the uncalibrated odometry
-uncalibrated_odometry = odometry_trajectory(U(:,1:3));
-disp('Uncalibrated Odometry');
-hold on;
-plot(uncalibrated_odometry(:,1), uncalibrated_odometry(:,2), 'b-', 'linewidth', 2);
-pause(10);
+#uncalibrated_odometry = odometry_trajectory(U(:,1:3));
+#disp('Uncalibrated Odometry');
+#hold on;
+#plot(uncalibrated_odometry(:,1), uncalibrated_odometry(:,2), 'b-', 'linewidth', 2);
+#pause(10);
+
+
 %disp('2D position of sensor w.r.t. base link');
 %S = function1();
 %disp(S);
