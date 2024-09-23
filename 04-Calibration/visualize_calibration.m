@@ -27,20 +27,30 @@ function odometry=read_odometry(path)
         #disp(n_lines);
 
         #odometry matrix, without first 8 lines
-        odometry = zeros(n_lines-8, 6);
+        odometry = zeros(n_lines-8, 9);
         #from 9 so it doesn't include the first 8 rows
         for i = 9:n_lines
             line = lines{i};
-            line = textscan(line, 'time: %f ticks: %d %d model_pose: %f %f %f tracker_pose: %f %f %f', 'Delimiter', ' ', 'MultipleDelimsAsOne', 1);
-            odometry(i-8,:) = cell2mat(line(4:9)); #here modified 4:6
+            line = textscan(line, 'time: %f ticks: %f %f model_pose: %f %f %f tracker_pose: %f %f %f', 'Delimiter', ' ', 'MultipleDelimsAsOne', 1);
+            odometry(i-8,:) = cell2mat(line(1:9)); #here modified 4:6
         end    
 endfunction
 
-function incr_encoder=eliminate_overflow()
+function new_dataset=eliminate_overflow(U)
 
 #if the previous value of tick is greater than the next one there is overflow, so write the change in
 #ticks as joints_max_enc_values - previous_tick_value + new_tick_value
 #otherwhise leave the normal difference
+
+#because of the floating point, is better to reinitialize the time to have more precise increment value of time
+#in matlab if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b,
+#eps(1.6e+09) = 2.38e-07 
+#if there is an increment of the last two digits in 1668091584.821040869 (example of our dataset) it would be lost.
+time = 0;
+
+#the incremental encoder values are stored in a uint32 variable with max range of:
+overflow_inc_enc = 4294967295;
+inc_enc = 0;
 
 endfunction
 
