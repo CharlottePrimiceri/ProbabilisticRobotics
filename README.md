@@ -40,7 +40,12 @@ Find the output:
 
 ## Solution
 
-# How to deal with Overflow?
+# Dataset
+-Time Values
+ Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain: 
+ eps(1.6e+09) = 2.38e-07 
+ So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) it would be lost. 
+-How to deal with Overflow?
 
 # Kinematic model
 
