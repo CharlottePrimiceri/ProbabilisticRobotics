@@ -58,31 +58,33 @@ endfor
 #the incremental encoder values are stored in a uint32 variable with max range of:
 overflow_inc_enc = 4294967295;
 
-#if the previous value of tick is greater than the next one there is overflow, so write the change in
+#if the previous value of tick is greater than the next one but cannot be considered 
+#as a backward motionthere is overflow, so write the change in
 #ticks as joints_max_enc_values - previous_tick_value + new_tick_value
 #otherwhise maintain the actual difference
 inc_enc_column = U(:,3);
 inc_enc_update = 0;
 previous_inc_t = inc_enc_column(1,1);
-for i = 1:n
+for i = 1:(n-1)
     current_inc_t = inc_enc_column(i+1,1);
     delta = current_inc_t - previous_inc_t;
-
-    if current_inc_t < previous_inc_t  
-       inc_enc_update = verflow_inc_enc - delta;
+    # if those two conditions occurs there is overflow
+    if current_inc_t < previous_inc_t && delta > (overflow_inc_enc/2)
+       inc_enc_update = overflow_inc_enc - delta;
        inc_enc_column(i+1,1) = inc_enc_update;
-    else:
+    else
         inc_enc_update = delta;
         inc_enc_column(i+1,1) = inc_enc_update;
-
+    endif
     previous_inc_t = current_inc_t;    
+endfor
 
 endfunction
 
 
 U = read_odometry(path);
 
-disp(time_column(1,1));
+disp(inc_enc_column)
 %disp(size(time_column,1))
 #compute the ground truth trajectory
 #T = odometry_trajectory(U(:,4:6));
