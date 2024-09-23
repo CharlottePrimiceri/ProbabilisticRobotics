@@ -41,14 +41,16 @@ Find the output:
 ## Solution
 
 ### Dataset:
-- Time Values
+- Time Values:
+
   Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain: 
   eps(1.6e+09) = 2.38e-07 
   So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) it would be lost. 
 
 - How to deal with Overflow?
-  As it is suggested, the reading of the incremental encoder, is stored in an uint32 variable which has a maximum range of 4294967295. 
-  So, if the previous value of tick is greater than the next one there is overflow. To avoid that, in this case change the increment of ticks as joints_max_enc_values - previous_tick_value + new_tick_value, otherwhise maintain the actual difference. 
 
-# Kinematic model
+  As it is suggested, the reading of the incremental encoder, is stored in an uint32 variable which has a maximum range of 4294967295. 
+  So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as joints_max_enc_values - previous_tick_value + new_tick_value, otherwhise maintain the actual difference. 
+
+### Kinematic model
 
