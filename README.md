@@ -51,6 +51,9 @@ Find the output:
 
   As it is suggested, the reading of the incremental encoder, is stored in an uint32 variable which has a maximum range of 4294967295. 
   So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as joints_max_enc_values - previous_tick_value + new_tick_value, otherwhise maintain the actual difference. 
-
+ 
+- True laser pose trajectory in octave:
+  ![Figure_2](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/true_traj_octave.png)
+  
 ### Kinematic model
 
