@@ -38,25 +38,38 @@ endfunction
 
 function new_dataset=eliminate_overflow(U)
 
-#if the previous value of tick is greater than the next one there is overflow, so write the change in
-#ticks as joints_max_enc_values - previous_tick_value + new_tick_value
-#otherwhise leave the normal difference
-
-#because of the floating point, is better to reinitialize the time to have more precise increment value of time
+# because of the floating point, is better to reinitialize the time to have more precise increment value of time
 #in matlab if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b,
 #eps(1.6e+09) = 2.38e-07 
 #if there is an increment of the last two digits in 1668091584.821040869 (example of our dataset) it would be lost.
-time = 0;
+time_column = U(:,1);
+time_update = 0;
+previous_time = time_column(1,1);
+n =size(time_column,1);
+time_column(1,1) = time_update;
+for i = 1:(n-1)
+    current_time = time_column(i+1,1);
+    time_increment = current_time - previous_time;
+    time_update += time_increment;
+    time_column(i+1,1) = time_update;
+    previous_time = current_time;
+endfor
 
 #the incremental encoder values are stored in a uint32 variable with max range of:
 overflow_inc_enc = 4294967295;
+
+#if the previous value of tick is greater than the next one there is overflow, so write the change in
+#ticks as joints_max_enc_values - previous_tick_value + new_tick_value
+#otherwhise maintain the actual difference
 inc_enc = 0;
 
 endfunction
 
 
 U = read_odometry(path);
-disp(U)
+
+disp(time_column(1,1));
+%disp(size(time_column,1))
 #compute the ground truth trajectory
 #T = odometry_trajectory(U(:,4:6));
 #disp('ground truth');
