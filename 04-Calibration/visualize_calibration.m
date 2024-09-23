@@ -83,15 +83,19 @@ endfunction
 
 
 U = read_odometry(path);
-
-disp(inc_enc_column)
+laser_pose = U(:,7:9);
+#disp(inc_enc_column);
 %disp(size(time_column,1))
 #compute the ground truth trajectory
 #T = odometry_trajectory(U(:,4:6));
 #disp('ground truth');
 #hold on;
-#plot(T(:,1),T(:,2), 'r-', 'linewidth', 2);
-#pause(10);
+plot(laser_pose(:,1),laser_pose(:,2),-'o' ); 
+# chosen those value of axis just beacuse i've known the true trajectory 
+# from the python file provided
+axis([-5 4 -4 2]);
+#'r-', 'linewidth', 2);
+pause(10);
 
 
 #compute the uncalibrated odometry
