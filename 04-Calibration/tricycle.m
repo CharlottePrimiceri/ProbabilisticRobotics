@@ -42,12 +42,13 @@ function delta_pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
 
 endfunction
 
-function robot_config = robot_config_f(kin_parameters, initial_state, n, max_enc_values)
-        
+function robot_config = robot_config_f(kin_parameters, initial_state, n, max_enc_values, u)
+        inc_enc_column = u(:,3);
+        abs_enc_column = u(:,2);
         Z=zeros(3, n);
         for i = 1:n
-            traction_incremental_ticks = ;
-            steering_ticks = ;
+            traction_incremental_ticks = inc_enc_column(i,1);
+            steering_ticks = abs_enc_column(i,1);
             Z(1:3,i) =predictFront_Tractor_Tricycle(traction_incremental_ticks,
                                                  steering_ticks, initial_state, kin_parameters, max_enc_values)
         endfor
