@@ -1,5 +1,5 @@
-function delta_pose_T=predictFront_Tractor_Tryìicycle(traction_incremental_ticks,
-                                                 steering_ticks, initial_state, kin_parameters, dataset, max_enc_values)
+function delta_pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
+                                                 steering_ticks, initial_state, kin_parameters, max_enc_values)
     
     steer_offset=kin_parameters(4);
     steer_max=max_enc_values(1);
@@ -31,8 +31,8 @@ function delta_pose_T=predictFront_Tractor_Tryìicycle(traction_incremental_tick
     dth = back_wheel_displacement*sin(steer_angle)/axis_lenght;
     
     # need to find S and C
-    S = [];
-    C = [];
+    S = [0.00000   0.00833   0.00000  -0.16667   0.00000   1.00000];
+    C = [0.00139   0.00000  -0.04167   0.00000   0.50000   0.00000];
 
     dx = delta * polyval(S,dth);
     dy = delta * polyval(C,dth);
@@ -42,10 +42,14 @@ function delta_pose_T=predictFront_Tractor_Tryìicycle(traction_incremental_tick
 
 endfunction
 
-function laser_pose_uncalibrated = laser_pose_uncalibrated(kin_parameters, U, tricycle)
-         
+function robot_config = robot_config_f(kin_parameters, initial_state, n, max_enc_values)
+        
+        Z=zeros(3, n);
         for i = 1:n
-            
+            traction_incremental_ticks = ;
+            steering_ticks = ;
+            Z(1:3,i) =predictFront_Tractor_Tricycle(traction_incremental_ticks,
+                                                 steering_ticks, initial_state, kin_parameters, max_enc_values)
         endfor
 
 endfunction
