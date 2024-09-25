@@ -38,9 +38,10 @@ function odometry=read_odometry(path)
             tick_inc = line{3};
             current_inc_t = tick_inc;
             delta = current_inc_t - previous_inc_t;
+            overflow_delta = overflow_inc_enc + delta;
             # if those two conditions occurs there is overflow
-            if current_inc_t < previous_inc_t && delta > (overflow_inc_enc/2)
-               inc_enc_update = overflow_inc_enc - delta;
+            if (current_inc_t < previous_inc_t && overflow_delta < (previous_inc_t - current_inc_t)) #delta < (overflow_inc_enc/2))
+               inc_enc_update = overflow_delta;
                tick_inc = inc_enc_update;
                display('overflow')
             else
@@ -48,14 +49,21 @@ function odometry=read_odometry(path)
                tick_inc = inc_enc_update;
                display('non overflow')
             endif
-            display(tick_inc)
-            #odometry(i-8,:) = cell2mat(line(1:9)); #here modified 4:6
-            odometry(i-8,:)=[cell2mat(line(1:2)), tick_inc, cell2mat(line(4:9))];
+            if tick_inc == 3230
+            display('oooooooooooooooooooooooo')
+            display(i)
+            endif
+            previous_inc_t = current_inc_t;
+            display(tick_inc) 
+            #line{3} = tick_inc;
+            odometry(i-8,:) = cell2mat(line(1:9)); #here modified 4:6
+            #odometry(i-8,:)=[cell2mat(line(1:2)), tick_inc, cell2mat(line(4:9))];
         endfor    
 endfunction
 
 U = read_odometry(path);
-#display(U(50:70,3))
+#display(U(:,3))
+
 function new_dataset=eliminate_overflow(U)
 
         # because of the floating point, is better to reinitialize the time to have more precise increment value of time
@@ -179,12 +187,14 @@ axis_lenght = initial_kin_parameters(3);
 inc_enc_column = U(:,3);
 abs_enc_column = U(:,2);
 #display(inc_enc_column(1,1))
-traction_incremental_ticks = inc_enc_column(68,1);
-steering_ticks = abs_enc_column(68,1);
-traction_front = traction_incremental_ticks * (ticks_to_meters / traction_max);
+#traction_incremental_ticks = inc_enc_column(68,1);
+traction_incremental_ticks = 4986;
+#steering_ticks = abs_enc_column(68,1);
+steering_ticks = 290;
+traction_front = traction_incremental_ticks * (ticks_to_meters / traction_max); #0,00111660332
 display(traction_front)
 if steering_ticks < (steer_max/2)
-   steer_angle = steering_ticks * (ticks_to_radians *2*pi / steer_max) + steer_offset;
+   steer_angle = steering_ticks * (ticks_to_radians *2*pi / steer_max) + steer_offset; #0,0222314453
    display('positive angle')
 else  
 # considering negative angles
@@ -192,7 +202,7 @@ else
    display('negative angle')
 endif
 display(steer_angle)
-back_wheel_displacement = traction_front*cos(steer_angle);
+back_wheel_displacement = traction_front*cos(steer_angle); #0,00108911
 display(back_wheel_displacement)
 dth = back_wheel_displacement*sin(steer_angle)/axis_lenght;
 display(dth)
