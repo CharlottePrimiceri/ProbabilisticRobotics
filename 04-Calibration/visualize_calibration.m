@@ -38,61 +38,67 @@ endfunction
 
 function new_dataset=eliminate_overflow(U)
 
-# because of the floating point, is better to reinitialize the time to have more precise increment value of time
-#in matlab if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b,
-#eps(1.6e+09) = 2.38e-07 
-#if there is an increment of the last two digits in 1668091584.821040869 (example of our dataset) it would be lost.
-time_column = U(:,1);
-time_update = 0;
-previous_time = time_column(1,1);
-n =size(time_column,1);
-time_column(1,1) = time_update;
-for i = 1:(n-1)
-    current_time = time_column(i+1,1);
-    time_increment = current_time - previous_time;
-    time_update += time_increment;
-    time_column(i+1,1) = time_update;
-    previous_time = current_time;
-endfor
+        # because of the floating point, is better to reinitialize the time to have more precise increment value of time
+        #in matlab if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b,
+        #eps(1.6e+09) = 2.38e-07 
+        #if there is an increment of the last two digits in 1668091584.821040869 (example of our dataset) it would be lost.
+        time_column = U(:,1);
+        time_update = 0;
+        previous_time = time_column(1,1);
+        n =size(time_column,1);
+        time_column(1,1) = time_update;
+        for i = 1:(n-1)
+            current_time = time_column(i+1,1);
+            time_increment = current_time - previous_time;
+            time_update += time_increment;
+            time_column(i+1,1) = time_update;
+            previous_time = current_time;
+        endfor
 
-#the incremental encoder values are stored in a uint32 variable with max range of:
-overflow_inc_enc = 4294967295;
+        #the incremental encoder values are stored in a uint32 variable with max range of:
+        overflow_inc_enc = 4294967295;
 
-#if the previous value of tick is greater than the next one but cannot be considered 
-#as a backward motionthere is overflow, so write the change in
-#ticks as joints_max_enc_values - previous_tick_value + new_tick_value
-#otherwhise maintain the actual difference
-inc_enc_column = U(:,3);
-inc_enc_update = 0;
-previous_inc_t = inc_enc_column(1,1);
-for i = 1:(n-1)
-    current_inc_t = inc_enc_column(i+1,1);
-    delta = current_inc_t - previous_inc_t;
-    # if those two conditions occurs there is overflow
-    if current_inc_t < previous_inc_t && delta > (overflow_inc_enc/2)
-       inc_enc_update = overflow_inc_enc - delta;
-       inc_enc_column(i+1,1) = inc_enc_update;
-    else
-        inc_enc_update = delta;
-        inc_enc_column(i+1,1) = inc_enc_update;
-    endif
-    previous_inc_t = current_inc_t;    
-endfor
+        #if the previous value of tick is greater than the next one but cannot be considered 
+        #as a backward motionthere is overflow, so write the change in
+        #ticks as joints_max_enc_values - previous_tick_value + new_tick_value
+        #otherwhise maintain the actual difference
+        inc_enc_column = U(:,3);
+        inc_enc_update = 0;
+        previous_inc_t = inc_enc_column(1,1);
+        for i = 1:(n-1)
+            current_inc_t = inc_enc_column(i+1,1);
+            delta = current_inc_t - previous_inc_t;
+            # if those two conditions occurs there is overflow
+            if current_inc_t < previous_inc_t && delta > (overflow_inc_enc/2)
+            inc_enc_update = overflow_inc_enc - delta;
+            inc_enc_column(i+1,1) = inc_enc_update;
+            else
+                inc_enc_update = delta;
+                inc_enc_column(i+1,1) = inc_enc_update;
+            endif
+            previous_inc_t = current_inc_t;    
+        endfor
 
+    new_dataset = U;
 endfunction
 
 
 U = read_odometry(path);
 laser_pose = U(:,7:9);
-
+u_new = eliminate_overflow(U);
+display(u_new(:,5))
 #plot ground truth of the laser pose trajectory 
-plot(laser_pose(:,1),laser_pose(:,2),-'o' ); 
+#plot(laser_pose(:,1),laser_pose(:,2),-'o' ); 
 # chosen those value of axis just beacuse i've known the true trajectory from the python file provided
-axis([-5 4 -4 2]);
-pause(10);
+#axis([-5 4 -4 2]);
+#pause(10);
 
 initial_kin_parameters = [0.1 0.0106141 1.4 0 1.5 0 0];
 max_enc_values = [8192 5000];
+n = size(u_new(:,2),1);
+
+T = robot_config_f(initial_kin_parameters, initial_state, n, max_enc_values, u_new);
+
 #initial_kin_parameters(1)
 #disp(inc_enc_column);
 %disp(size(time_column,1))
