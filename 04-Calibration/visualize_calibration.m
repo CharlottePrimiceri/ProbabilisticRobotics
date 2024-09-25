@@ -4,13 +4,14 @@ clear
 clc
 #import 2d geometry utils
 source "../tools/utilities/geometry_helpers_2d.m"
-source "../04-Calibration/odometry_trajectory.m"
+#source "../04-Calibration/odometry_trajectory.m"
+#source "../04-Calibration/tricycle.m"
 disp('loading the matrix');
 path = 'dataset.txt';
 # Read dataset.... transform then into function
 
 #initial guess [x y theta psi]
-initial_state = [0 0 0 0];
+initial_state = [0; 0; 0];
 
 
 function odometry=read_odometry(path)
@@ -25,17 +26,36 @@ function odometry=read_odometry(path)
         lines = dataset{1};
         n_lines = size(lines)(1);
         #disp(n_lines);
-
+        overflow_inc_enc = 4294967295;
+        previous_inc_t = 4294859756;
+        inc_enc_update = 0;
         #odometry matrix, without first 8 lines
         odometry = zeros(n_lines-8, 9);
         #from 9 so it doesn't include the first 8 rows
-        for i = 9:n_lines
+        for i = 9:70
             line = lines{i};
             line = textscan(line, 'time: %f ticks: %f %f model_pose: %f %f %f tracker_pose: %f %f %f', 'Delimiter', ' ', 'MultipleDelimsAsOne', 1);
-            odometry(i-8,:) = cell2mat(line(1:9)); #here modified 4:6
-        end    
+            tick_inc = line{3};
+            current_inc_t = tick_inc;
+            delta = current_inc_t - previous_inc_t;
+            # if those two conditions occurs there is overflow
+            if current_inc_t < previous_inc_t && delta > (overflow_inc_enc/2)
+               inc_enc_update = overflow_inc_enc - delta;
+               tick_inc = inc_enc_update;
+               display('overflow')
+            else
+               inc_enc_update = delta;
+               tick_inc = inc_enc_update;
+               display('non overflow')
+            endif
+            display(tick_inc)
+            #odometry(i-8,:) = cell2mat(line(1:9)); #here modified 4:6
+            odometry(i-8,:)=[cell2mat(line(1:2)), tick_inc, cell2mat(line(4:9))];
+        endfor    
 endfunction
 
+U = read_odometry(path);
+#display(U(50:70,3))
 function new_dataset=eliminate_overflow(U)
 
         # because of the floating point, is better to reinitialize the time to have more precise increment value of time
@@ -70,35 +90,62 @@ function new_dataset=eliminate_overflow(U)
             delta = current_inc_t - previous_inc_t;
             # if those two conditions occurs there is overflow
             if current_inc_t < previous_inc_t && delta > (overflow_inc_enc/2)
-            inc_enc_update = overflow_inc_enc - delta;
-            inc_enc_column(i+1,1) = inc_enc_update;
+               inc_enc_update = overflow_inc_enc - delta;
+               inc_enc_column(i+1,1) = inc_enc_update;
             else
                 inc_enc_update = delta;
                 inc_enc_column(i+1,1) = inc_enc_update;
             endif
             previous_inc_t = current_inc_t;    
         endfor
-
-    new_dataset = U;
+        U(:,1)= time_column;
+        U(:,3) = inc_enc_column;
+        new_dataset = U;
 endfunction
 
 
-U = read_odometry(path);
-laser_pose = U(:,7:9);
-u_new = eliminate_overflow(U);
-display(u_new(:,5))
+#U = read_odometry(path);
+#model_pose = U(:,4:6);
+#display(U(56:60,3))
+display('finisce di far vedere la colonna di tick')
+
+overflow_inc_enc = 4294967295;
+inc_enc_column_pre = U(:,3);
+inc_enc_update = 0;
+n = size(inc_enc_column_pre,1);
+previous_inc_t = inc_enc_column_pre(1,1);
+for i = 1:(35)
+    current_inc_t = inc_enc_column_pre(i,1);
+    delta = current_inc_t - previous_inc_t; 
+    # if those two conditions occurs there is overflow
+    if current_inc_t < previous_inc_t && delta > (overflow_inc_enc/2)
+        inc_enc_update = overflow_inc_enc - delta;
+        inc_enc_column(i,1) = inc_enc_update;
+    else
+        inc_enc_update = delta;
+        inc_enc_column(i,1) = inc_enc_update;
+    endif
+previous_inc_t = current_inc_t;    
+endfor
+
+#display(inc_enc_column(35,1))
+
+#u_new = eliminate_overflow(U);
+#inc = u_new(:,3);
+#display(inc(1,1))
+#display(u_new(:,5))
 #plot ground truth of the laser pose trajectory 
-#plot(laser_pose(:,1),laser_pose(:,2),-'o' ); 
+#plot(model_pose(:,1),model_pose(:,2),-'o' ); 
 # chosen those value of axis just beacuse i've known the true trajectory from the python file provided
 #axis([-5 4 -4 2]);
 #pause(10);
 
 initial_kin_parameters = [0.1 0.0106141 1.4 0 1.5 0 0];
 max_enc_values = [8192 5000];
-n = size(u_new(:,2),1);
+#n = size(u_new(:,2),1);
 
-T = robot_config_f(initial_kin_parameters, initial_state, n, max_enc_values, u_new);
-
+#T = robot_config_f(initial_state, max_enc_values, u_new);
+#display(T)
 #initial_kin_parameters(1)
 #disp(inc_enc_column);
 %disp(size(time_column,1))
@@ -123,3 +170,124 @@ T = robot_config_f(initial_kin_parameters, initial_state, n, max_enc_values, u_n
 %disp('kinematic parameters');
 %P = function2();
 %disp(P);
+steer_offset=initial_kin_parameters(4);
+steer_max=max_enc_values(1);
+ticks_to_meters=initial_kin_parameters(2);
+traction_max = max_enc_values(2);
+ticks_to_radians = initial_kin_parameters(1);
+axis_lenght = initial_kin_parameters(3);
+inc_enc_column = U(:,3);
+abs_enc_column = U(:,2);
+#display(inc_enc_column(1,1))
+traction_incremental_ticks = inc_enc_column(68,1);
+steering_ticks = abs_enc_column(68,1);
+traction_front = traction_incremental_ticks * (ticks_to_meters / traction_max);
+display(traction_front)
+if steering_ticks < (steer_max/2)
+   steer_angle = steering_ticks * (ticks_to_radians *2*pi / steer_max) + steer_offset;
+   display('positive angle')
+else  
+# considering negative angles
+   steer_angle = -steering_ticks * [(steer_max-ticks_to_radians) *2*pi / steer_max] + steer_offset;
+   display('negative angle')
+endif
+display(steer_angle)
+back_wheel_displacement = traction_front*cos(steer_angle);
+display(back_wheel_displacement)
+dth = back_wheel_displacement*sin(steer_angle)/axis_lenght;
+display(dth)
+S = [-1/5040  0     1/120 0     -1/6  0   1];
+C = [0        1/720 0     -1/24 0     1/2 0];
+dx = back_wheel_displacement * polyval(S,dth);
+dy = back_wheel_displacement * polyval(C,dth);
+display(dx)
+display(dy)
+state = [0.218764; 0.000380236;  0.00347622];
+x = state(1) + dx;
+y = state(2) + dy;
+th = state(3) + dth;
+pose_T = [x; y; th];
+display(pose_T)
+display(inc_enc_column(27,1))
+function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
+                                                 initial_state, steering_ticks, max_enc_values)
+        kin_parameters = [0.1 0.0106141 1.4 0 1.5 0 0];
+        steer_offset=kin_parameters(4);
+        steer_max=max_enc_values(1);
+        ticks_to_meters=kin_parameters(2);
+        traction_max = max_enc_values(2);
+        ticks_to_radians = kin_parameters(1);
+        axis_lenght = kin_parameters(3);
+        #i can find the steering angle but not the actual front displacement bc i don't have the radius
+        #should i use the classic kinematic model by imposing some initial value on the front wheel? 
+        #but i still can find the displacement by (current_tick - previous_tick)kt
+        #i can put the computation for the overflow directly there
+        
+        #traction_incremental_ticks are the increments of the encoder computed in the dataset function
+        #(ticks_to_meters / traction_max) is the value of meters corresponds to one single tick
+        traction_front = traction_incremental_ticks * (ticks_to_meters / traction_max);
+        
+        # (ticks_to_radians *2*pi / steer_max) is the value of radians (converted from revolution to
+        # radians with a factor 2pi)  corresponds to one single tick in case of positive angles
+        if steering_ticks < (steer_max/2)
+          steer_angle = steering_ticks * (ticks_to_radians *2*pi / steer_max) + steer_offset;
+        else  
+        # considering negative angles
+          steer_angle = -steering_ticks * [(steer_max-ticks_to_radians) *2*pi / steer_max] + steer_offset;
+        endif
+        
+        # drawing the model of the tricycle we obtain that relationship
+        back_wheel_displacement = traction_front*cos(steer_angle);
+
+        dth = back_wheel_displacement*sin(steer_angle)/axis_lenght;
+        
+        # need to find S and C
+        S = [-1/5040  0     1/120 0     -1/6  0   1];
+        C = [0        1/720 0     -1/24 0     1/2 0];
+        #dx = back_wheel_displacement * (sin(dth)/dth);
+        #dy = back_wheel_displacement * (1-cos(dth))/dth;
+        
+        dx = back_wheel_displacement * polyval(S,dth);
+        dy = back_wheel_displacement * polyval(C,dth);
+        #pose_T=[dx; dy; dth];
+        x = initial_state(1) + dx;
+        y = initial_state(2) + dy;
+        th = initial_state(3) + dth;
+        pose_T = [x; y; th];
+
+endfunction
+
+function Z = robot_config_f(initial_state, max_enc_values, u_new)
+        inc_enc_column = u_new(:,3);
+        abs_enc_column = u_new(:,2);
+        n = size(inc_enc_column, 1);
+        Z=zeros(3, n);
+        for i = 1:n
+            traction_incremental_ticks = inc_enc_column(i,1);
+            steering_ticks = abs_enc_column(i,1);
+            Z(1:3,i) = predictFront_Tractor_Tricycle(traction_incremental_ticks,
+                                                 initial_state, steering_ticks, max_enc_values)
+            initial_state = Z(1:3,i);
+        endfor
+        
+endfunction
+
+#inc_enc_column = u_new(:,3);
+#display(inc_enc_column)
+#abs_enc_column = u_new(:,2);
+#n = size(abs_enc_column, 1);
+#Z=zeros(3, n);
+#delta_pose_T=[3; 4; 5];
+#Z(1:3,2) = delta_pose_T; 
+#display(delta_pose_T(3))
+#display(delta_pose_T)
+#T = robot_config_f(initial_state, max_enc_values, U);
+#display(T(1:3,34))
+#display(T(1:3,35))
+#display(T(1:3,36))
+#display(T(1:3,37))
+#display(T(1:3,37))
+#plot(T(1,:),T(2,:),-'o'); 
+# chosen those value of axis just beacuse i've known the true trajectory from the python file provided
+#axis([-5 25 -13 2]);
+#pause(10);
