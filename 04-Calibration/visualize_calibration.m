@@ -32,7 +32,7 @@ function odometry=read_odometry(path)
         #odometry matrix, without first 8 lines
         odometry = zeros(n_lines-8, 9);
         #from 9 so it doesn't include the first 8 rows
-        for i = 9:70
+        for i = 9:n_lines
             line = lines{i};
             line = textscan(line, 'time: %f ticks: %f %f model_pose: %f %f %f tracker_pose: %f %f %f', 'Delimiter', ' ', 'MultipleDelimsAsOne', 1);
             tick_inc = line{3};
@@ -43,21 +43,17 @@ function odometry=read_odometry(path)
             if (current_inc_t < previous_inc_t && overflow_delta < (previous_inc_t - current_inc_t)) #delta < (overflow_inc_enc/2))
                inc_enc_update = overflow_delta;
                tick_inc = inc_enc_update;
-               display('overflow')
+               #display('overflow')
             else
                inc_enc_update = delta;
                tick_inc = inc_enc_update;
-               display('non overflow')
-            endif
-            if tick_inc == 3230
-            display('oooooooooooooooooooooooo')
-            display(i)
+               #display('non overflow')
             endif
             previous_inc_t = current_inc_t;
-            display(tick_inc) 
+            #display(tick_inc) 
             #line{3} = tick_inc;
-            odometry(i-8,:) = cell2mat(line(1:9)); #here modified 4:6
-            #odometry(i-8,:)=[cell2mat(line(1:2)), tick_inc, cell2mat(line(4:9))];
+            #odometry(i-8,:) = cell2mat(line(1:9)); #here modified 4:6
+            odometry(i-8,:)=[cell2mat(line(1:2)), tick_inc, cell2mat(line(4:9))];
         endfor    
 endfunction
 
@@ -182,43 +178,52 @@ steer_offset=initial_kin_parameters(4);
 steer_max=max_enc_values(1);
 ticks_to_meters=initial_kin_parameters(2);
 traction_max = max_enc_values(2);
-ticks_to_radians = initial_kin_parameters(1);
+radians_one_tick = initial_kin_parameters(1);
 axis_lenght = initial_kin_parameters(3);
 inc_enc_column = U(:,3);
 abs_enc_column = U(:,2);
+#display(inc_enc_column)
+display('oooooooooooooooo')
 #display(inc_enc_column(1,1))
 #traction_incremental_ticks = inc_enc_column(68,1);
-traction_incremental_ticks = 4986;
+traction_incremental_ticks = 10902;
 #steering_ticks = abs_enc_column(68,1);
-steering_ticks = 290;
-traction_front = traction_incremental_ticks * (ticks_to_meters / traction_max); #0,00111660332
+steering_ticks = 8012;
+traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max)); #0,00111660332
 display(traction_front)
+
 if steering_ticks < (steer_max/2)
-   steer_angle = steering_ticks * (ticks_to_radians *2*pi / steer_max) + steer_offset; #0,0222314453
+   steer_angle = steering_ticks * (radians_one_tick *2*pi / steer_max) + steer_offset; #0,0222314453
    display('positive angle')
 else  
 # considering negative angles
-   steer_angle = -steering_ticks * [(steer_max-ticks_to_radians) *2*pi / steer_max] + steer_offset;
+   steer_angle = -radians_one_tick  * [(steer_max-steering_ticks) *2*pi / steer_max] + steer_offset;
    display('negative angle')
 endif
+state = [1.99646 0.0978532  0.109438];
+theta = state(3);
 display(steer_angle)
-back_wheel_displacement = traction_front*cos(steer_angle); #0,00108911
-display(back_wheel_displacement)
-dth = back_wheel_displacement*sin(steer_angle)/axis_lenght;
-display(dth)
-S = [-1/5040  0     1/120 0     -1/6  0   1];
-C = [0        1/720 0     -1/24 0     1/2 0];
-dx = back_wheel_displacement * polyval(S,dth);
-dy = back_wheel_displacement * polyval(C,dth);
+dx = traction_front *cos(theta + steer_angle);
+dy = traction_front *sin(theta + steer_angle);
+dth = (traction_front/axis_lenght) * sin(steer_angle);
+
+#back_wheel_displacement = traction_front*cos(steer_angle); #0,00108911
+#display(back_wheel_displacement)
+#dth = traction_front*sin(steer_angle)/axis_lenght;
+#S = [-1/5040  0     1/120 0     -1/6  0   1];
+#C = [0        1/720 0     -1/24 0     1/2 0];
+#dx = back_wheel_displacement * polyval(S,dth);
+#dy = back_wheel_displacement * polyval(C,dth);
 display(dx)
 display(dy)
-state = [0.218764; 0.000380236;  0.00347622];
+display(dth)
 x = state(1) + dx;
 y = state(2) + dy;
 th = state(3) + dth;
 pose_T = [x; y; th];
 display(pose_T)
-display(inc_enc_column(27,1))
+#display(inc_enc_column(27,1))
+
 function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
                                                  initial_state, steering_ticks, max_enc_values)
         kin_parameters = [0.1 0.0106141 1.4 0 1.5 0 0];
@@ -240,26 +245,33 @@ function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
         # (ticks_to_radians *2*pi / steer_max) is the value of radians (converted from revolution to
         # radians with a factor 2pi)  corresponds to one single tick in case of positive angles
         if steering_ticks < (steer_max/2)
-          steer_angle = steering_ticks * (ticks_to_radians *2*pi / steer_max) + steer_offset;
+           steer_angle = steering_ticks * (ticks_to_radians *2*pi / steer_max) + steer_offset;
         else  
         # considering negative angles
-          steer_angle = -steering_ticks * [(steer_max-ticks_to_radians) *2*pi / steer_max] + steer_offset;
+           steer_angle = -steering_ticks * [(steer_max-ticks_to_radians) *2*pi / steer_max] + steer_offset;
         endif
         
         # drawing the model of the tricycle we obtain that relationship
-        back_wheel_displacement = traction_front*cos(steer_angle);
+        #back_wheel_displacement = traction_front*cos(steer_angle);
 
-        dth = back_wheel_displacement*sin(steer_angle)/axis_lenght;
+        #dth = traction_front*sin(steer_angle)/axis_lenght;
         
         # need to find S and C
-        S = [-1/5040  0     1/120 0     -1/6  0   1];
-        C = [0        1/720 0     -1/24 0     1/2 0];
+        #S = [-1/5040  0     1/120 0     -1/6  0   1];
+        #C = [0        1/720 0     -1/24 0     1/2 0];
+
+
         #dx = back_wheel_displacement * (sin(dth)/dth);
         #dy = back_wheel_displacement * (1-cos(dth))/dth;
         
-        dx = back_wheel_displacement * polyval(S,dth);
-        dy = back_wheel_displacement * polyval(C,dth);
+        #dx = back_wheel_displacement * polyval(S,dth);
+        #dy = back_wheel_displacement * polyval(C,dth);
         #pose_T=[dx; dy; dth];
+        theta = initial_state(3);
+        display(steer_angle)
+        dx = traction_front *cos(theta + steer_angle);
+        dy = traction_front *sin(theta + steer_angle);
+        dth = (traction_front/axis_lenght) * sin(steer_angle);
         x = initial_state(1) + dx;
         y = initial_state(2) + dy;
         th = initial_state(3) + dth;
@@ -273,14 +285,16 @@ function Z = robot_config_f(initial_state, max_enc_values, u_new)
         n = size(inc_enc_column, 1);
         Z=zeros(3, n);
         for i = 1:n
-            traction_incremental_ticks = inc_enc_column(i,1);
-            steering_ticks = abs_enc_column(i,1);
+            traction_incremental_ticks = inc_enc_column(i);
+            steering_ticks = abs_enc_column(i);
             Z(1:3,i) = predictFront_Tractor_Tricycle(traction_incremental_ticks,
                                                  initial_state, steering_ticks, max_enc_values)
             initial_state = Z(1:3,i);
         endfor
         
 endfunction
+display(inc_enc_column(5))
+display(size(inc_enc_column, 1))
 
 #inc_enc_column = u_new(:,3);
 #display(inc_enc_column)
@@ -291,13 +305,14 @@ endfunction
 #Z(1:3,2) = delta_pose_T; 
 #display(delta_pose_T(3))
 #display(delta_pose_T)
-#T = robot_config_f(initial_state, max_enc_values, U);
-#display(T(1:3,34))
+#U(1:71, :) = [];
+T = robot_config_f(initial_state, max_enc_values, U);
+#display(T(1:3,1:691))
 #display(T(1:3,35))
 #display(T(1:3,36))
 #display(T(1:3,37))
-#display(T(1:3,37))
-#plot(T(1,:),T(2,:),-'o'); 
+#display(T(2,:))
+plot(T(1,:),T(2,:),-'o'); 
 # chosen those value of axis just beacuse i've known the true trajectory from the python file provided
-#axis([-5 25 -13 2]);
-#pause(10);
+axis([-5 25 -13 2]);
+pause(10);
