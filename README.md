@@ -34,9 +34,13 @@ For a certain time step we have:
 Find the output:
 - 2D position of the sensor w.r.t the base link
 - The kinematic parameters [ ksteer, ktraction, steer_offset, base_line ]
-- Reach the correct trajectory:
+- Reach the correct trajectory from Uncalibrated Odometry: 
 
-![Figure_1](https://github.com/user-attachments/assets/ca34aed1-7f20-48aa-b1fd-7660e9ba3524)
+  ![Figure_1]https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/uncalibrated_odometry_ground_truth.png
+
+  to ground truth trajectory:
+
+  ![Figure_2](https://github.com/user-attachments/assets/ca34aed1-7f20-48aa-b1fd-7660e9ba3524)
 
 ## Solution
 
@@ -53,7 +57,10 @@ Find the output:
   So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as joints_max_enc_values - previous_tick_value + new_tick_value, otherwhise maintain the actual difference. 
  
 - True laser pose trajectory in octave:
-  ![Figure_2](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/true_traj_octave.png)
-  
-### Kinematic model
+   ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/true_traj_octave.png)
 
+### Tricycle Kinematic model
+
+- Uncalibrated Odometry of the front wheel (Ground Truth vs Predicted):
+   ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/predicted_uncalibrated_odometry.png)
+ 
