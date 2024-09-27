@@ -36,7 +36,7 @@ Find the output:
 - The kinematic parameters [ ksteer, ktraction, steer_offset, base_line ]
 - Reach the correct trajectory from Uncalibrated Odometry: 
 
-  ![Figure_1]https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/uncalibrated_odometry_ground_truth.png
+  ![Figure_1](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/uncalibrated_odometry_ground_truth.png)
 
   to ground truth trajectory:
 
