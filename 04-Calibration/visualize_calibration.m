@@ -90,7 +90,6 @@ function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
         ticks_to_radians = kin_parameters(1);
         theta = initial_state(3);
         
-        # Compute the Translational displacement:
         # traction_incremental_ticks are the increments of the encoder computed in the dataset function
         # (ticks_to_meters / traction_max) is the value of meters corresponds to one single tick
         traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max));
@@ -101,14 +100,19 @@ function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
            # considering negative angles
            steer_angle = - (ticks_to_radians * (steer_max - steering_ticks)*2*pi/(steer_max)) + steer_offset;
         else
+           # positive angles
            steer_angle = (ticks_to_radians * steering_ticks *pi *2 / (steer_max)) + steer_offset;
         endif
 
-        # drawing the model of the tricycle we obtain that relationship
-        #
+        # drawing the model of the tricycle we obtain that relationship for the 
+        # translational and rotational displacements
+        # The equations for the transition function are obtained by integrating the 
+        # translational velocity and the rotational velocity in the time interval
+        # v = delta_s/delta_T
+        # then apply Euler Integration x_t = x_(t-1) + v * delta_t * cos(theta_(t-1)+psi_(t-1))
         dx = traction_front *cos(theta + steer_angle);
         dy = traction_front *sin(theta + steer_angle);
-        dth = (traction_front/axis_lenght) * sin(steer_angle);
+        dth = traction_front * (sin(steer_angle))/axis_lenght;
         x = initial_state(1) + dx;
         y = initial_state(2) + dy;
         th = initial_state(3) + dth;
