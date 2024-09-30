@@ -74,3 +74,9 @@ Find the output:
 - Uncalibrated Odometry of the front wheel (Ground Truth vs Predicted):
    ![Figure_4](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/predicted_uncalibrated_odometry.png)
  
+
+### Laser pose w.r.t base link
+
+- The laser transformation w.r.t. the reference frame of the robot is given by the transformation:
+
+  $$ T_laser^reference = T_rear^reference * (T_laser^base)^(-1)
