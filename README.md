@@ -34,11 +34,11 @@ For a certain time step we have:
 Find the output:
 - 2D position of the sensor w.r.t the base link
 - The kinematic parameters [ ksteer, ktraction, steer_offset, base_line ]
-- Reach the correct trajectory from Uncalibrated Odometry: 
+- From the uncalibrated odometry of the front wheel: 
 
   ![Figure_1](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/uncalibrated_odometry_ground_truth.png)
 
-  to ground truth trajectory:
+  find the correct trajectory for the laser attached to the front wheel:
 
   ![Figure_2](https://github.com/user-attachments/assets/ca34aed1-7f20-48aa-b1fd-7660e9ba3524)
 
@@ -47,8 +47,8 @@ Find the output:
 ### Dataset:
 - Time Values:
 
-  Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain: 
-  eps(1.6e+09) = 2.38e-07. 
+  Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain: \
+  eps(1.6e+09) = 2.38e-07.\ 
   So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) then it would be lost. 
 
 - How to deal with Overflow?
@@ -72,5 +72,5 @@ Find the output:
 ### Tricycle Kinematic model
 
 - Uncalibrated Odometry of the front wheel (Ground Truth vs Predicted):
-   ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/predicted_uncalibrated_odometry.png)
+   ![Figure_4](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/predicted_uncalibrated_odometry.png)
  
