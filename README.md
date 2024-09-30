@@ -55,7 +55,7 @@ Find the output:
 
   As it is suggested, the reading of the incremental encoder, is stored in an uint32 variable which has a maximum range of 4294967295. 
   So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as overflow_delta = overflow_max_value - previous_tick_value + new_tick_value, otherwhise maintain the actual difference. So the two conditions that occur in case of overflow is that the current incremental value is lesser than the previous incremental value AND the overflow_delta is lesser than the difference between the previous incremental value and the current one (this is the case for which this can't be a backward motion).
-  For example, considering two cases where the previous value is bigger than the second: \\
+  For example, considering two cases where the previous value is bigger than the second: \
   1771th sample: enc_value=10005756
   1772th sample: enc_value=9989426
   This should be a simple backward motion
