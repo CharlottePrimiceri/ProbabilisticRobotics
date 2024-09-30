@@ -79,4 +79,4 @@ Find the output:
 
 - The laser transformation w.r.t. the reference frame of the robot is given by the transformation:
 
-  $ T_{laser}^reference = T_{rear}^reference * (T_{laser}^base)^(-1)$ 
+  $\T_{laser}^reference = T_{rear}^reference * (T_{laser}^base)^(-1)$ 
