@@ -78,5 +78,4 @@ Find the output:
 ### Laser pose w.r.t base link
 
 - The laser transformation w.r.t. the reference frame of the robot is given by the transformation:\
-$x^2$
-\(T_{laser}^{reference} = T_{rear}^{reference} \cdot (T_{laser}^{base})^{-1} \)
+$T_{laser}^{reference} = T_{rear}^{reference} \cdot (T_{laser}^{base})^{-1} \)$
