@@ -120,6 +120,21 @@ function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
 
 endfunction
 
+function laser_pose = laser(kin_parameters, front_odometry, laser_base)
+        axis_lenght = kin_parameters(3);
+        laser_base = [laser_base(1); laser_base(2), laser_base(3)];
+        T_laser_base = v2t(laser_base)
+        n = size(front_odometry(:,1), 1);
+        for i = 1:n
+            rear_x = front_odometry(1, i) + axis_lenght*cos(front_odometry(3,i));
+            rear_y = front_odometry(2, i) + axis_lenght*sin(front_odometry(3,i));
+            rear_pose = [rear_x; rear_y; front_odometry(3,i)];
+            T_rear = v2t(rear_pose)
+
+        endfor
+
+endfunction
+
 function Z = robot_config_f(initial_state, max_enc_values, U, kin_parameters)
         inc_enc_column = U(:,3);
         abs_enc_column = U(:,2);
@@ -146,6 +161,7 @@ endfunction
 
 
 kinematic_parameters = [0.1 0.0106141 1.4 0];
+laser_base = [1.5 0 0];
 max_enc_values = [8192 5000];
 #initial guess [x y theta psi]
 initial_state = [0; 0; 0];
