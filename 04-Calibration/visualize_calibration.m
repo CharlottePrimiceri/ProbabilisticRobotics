@@ -36,7 +36,7 @@ function odometry=read_odometry(path)
             delta = current_inc_t - previous_inc_t;
             overflow_delta = overflow_inc_enc + delta;
             # if those two conditions occurs there is overflow
-            if (current_inc_t < previous_inc_t && overflow_delta < (previous_inc_t - current_inc_t)) #delta < (overflow_inc_enc/2))
+            if (current_inc_t < previous_inc_t && overflow_delta < (previous_inc_t - current_inc_t))
                inc_enc_update = overflow_delta;
                tick_inc = inc_enc_update;
                #display('overflow')
@@ -46,7 +46,6 @@ function odometry=read_odometry(path)
                #display('non overflow')
             endif
             previous_inc_t = current_inc_t;
-            display(tick_inc) 
             odometry(i-8,:)=[cell2mat(line(1:2)), tick_inc, cell2mat(line(4:9))];
         endfor    
 endfunction
@@ -78,6 +77,8 @@ function dataset_time=reset_time(U)
 
 endfunction
 
+U = reset_time(U)
+display(U(:,1))
 
 function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
                                                  initial_state, steering_ticks, max_enc_values, kin_parameters)
@@ -89,8 +90,9 @@ function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
         ticks_to_radians = kin_parameters(1);
         theta = initial_state(3);
         
-        #traction_incremental_ticks are the increments of the encoder computed in the dataset function
-        #(ticks_to_meters / traction_max) is the value of meters corresponds to one single tick
+        # Compute the Translational displacement:
+        # traction_incremental_ticks are the increments of the encoder computed in the dataset function
+        # (ticks_to_meters / traction_max) is the value of meters corresponds to one single tick
         traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max));
         
         # (ticks_to_radians *2*pi / steer_max) is the value of radians (converted from revolution to
@@ -103,6 +105,7 @@ function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
         endif
 
         # drawing the model of the tricycle we obtain that relationship
+        #
         dx = traction_front *cos(theta + steer_angle);
         dy = traction_front *sin(theta + steer_angle);
         dth = (traction_front/axis_lenght) * sin(steer_angle);
@@ -120,6 +123,9 @@ function Z = robot_config_f(initial_state, max_enc_values, U, kin_parameters)
         Z=zeros(3, n);
         for i = 1:n
             if i == 1
+                # initialize the first to zero because we need to consider the angle at the previous time step
+                # and the same for the rotational displacement
+                # no need to do that for the increment because it is already zero
                 steering_ticks = 0;
                 Z(1:3,i) = predictFront_Tractor_Tricycle(inc_enc_column(i),
                                                  initial_state, steering_ticks, max_enc_values, kin_parameters)
@@ -141,11 +147,11 @@ max_enc_values = [8192 5000];
 initial_state = [0; 0; 0];
 inc_enc_value =U(:,3);
 abs_enc_value=U(:,2);
-T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
-plot(T(1,:),T(2,:),-'o');
+#T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+#plot(T(1,:),T(2,:),-'o');
 # chosen those value of axis just beacuse i've known the true trajectory from the python file provided
-axis([-5 25 -13 2]);
-pause(10);
+#axis([-5 25 -13 2]);
+#pause(10);
 
 #plot ground truth of the laser pose trajectory 
 #plot(U(:,7), U(:,8),-'o' ); 
@@ -154,8 +160,8 @@ pause(10);
 #pause(10);
 
 #compute the uncalibrated odometry
-#plot(U(:,4), U(:,5), 'b-', 'linewidth', 2);
-#pause(10);
+plot(U(:,4), U(:,5), 'b-', 'linewidth', 2);
+pause(10);
 
 
 %disp('2D position of sensor w.r.t. base link');
