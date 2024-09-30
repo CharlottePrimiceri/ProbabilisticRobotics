@@ -48,14 +48,23 @@ Find the output:
 - Time Values:
 
   Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain: 
-  eps(1.6e+09) = 2.38e-07 
-  So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) it would be lost. 
+  eps(1.6e+09) = 2.38e-07. 
+  So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) then it would be lost. 
 
 - How to deal with Overflow?
 
   As it is suggested, the reading of the incremental encoder, is stored in an uint32 variable which has a maximum range of 4294967295. 
-  So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as joints_max_enc_values - previous_tick_value + new_tick_value, otherwhise maintain the actual difference. 
- 
+  So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as overflow_delta = overflow_max_value - previous_tick_value + new_tick_value, otherwhise maintain the actual difference. So the two conditions that occur in case of overflow is that the current incremental value is lesser than the previous incremental value AND the overflow_delta is lesser than the difference between the previous incremental value and the current one (this is the case for which this can't be a backward motion).
+  For example, considering two cases where the previous value is bigger than the second: 
+  1771th sample: enc_value=10005756
+  1772th sample: enc_value=9989426
+  This should be a simple backward motion
+  current - previous = -16330
+  And in fact overflow-previous+current is way to bigger than 16330, so it's not the case of overflow.
+  While considering:
+  67th sample: enc_value=4294962835
+  68th sample: enc_value=526
+  overflow-previous+current is lesser than the difference preovious-current, so we have overflow. 
 - True laser pose trajectory in octave:
    ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/true_traj_octave.png)
 
