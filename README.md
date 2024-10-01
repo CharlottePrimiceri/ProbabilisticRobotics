@@ -18,8 +18,8 @@
   
   translation: [1.5, 0, 0]
   
-  rotation: [0, 0, 0, 1]
-  -------ask about quaternion representation-------
+  rotation: [0, 0, 0, 1]\
+ 
   so the laser position and orientation w.r.t. the base link is [x y theta]=[1.5 0 0]
 
 For a certain time step we have:
