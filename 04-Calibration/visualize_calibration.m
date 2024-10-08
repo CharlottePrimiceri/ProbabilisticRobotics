@@ -4,7 +4,7 @@ clear
 clc
 #import 2d geometry utils
 source "../tools/utilities/geometry_helpers_2d.m"
-#source "../04-Calibration/odometry_trajectory.m"
+source "../04-Calibration/odometry_trajectory.m"
 #source "../04-Calibration/tricycle.m"
 disp('loading the matrix');
 path = 'dataset.txt';
@@ -49,7 +49,8 @@ function odometry=read_odometry(path)
             odometry(i-8,:)=[cell2mat(line(1:2)), tick_inc, cell2mat(line(4:9))];
         endfor    
 endfunction
-
+###ctrl k u ctrl k c commentare scommentae 
+#+str{variabile_nome}+
 U = read_odometry(path);
 display(size(U))
 
@@ -122,17 +123,24 @@ endfunction
 
 function laser_pose = laser(kin_parameters, front_odometry, laser_base)
         axis_lenght = kin_parameters(3);
-        laser_base = [laser_base(1); laser_base(2), laser_base(3)];
+        laser_base = [laser_base(1); laser_base(2); laser_base(3)];
+        #display(laser_base)
         T_laser_base = v2t(laser_base);
-        n = size(front_odometry(:,1), 1);
+        laser_pose_vector = [];
+        n = size(front_odometry, 2);
+        display(n)
         for i = 1:n
             rear_x = front_odometry(1, i) + axis_lenght*cos(front_odometry(3,i));
             rear_y = front_odometry(2, i) + axis_lenght*sin(front_odometry(3,i));
             rear_pose = [rear_x; rear_y; front_odometry(3,i)];
             T_rear = v2t(rear_pose);
             T_laser = T_rear * T_laser_base;
+            laser_pose_v = t2v(T_laser);
+            #display(laser_pose_v)
+            laser_pose = [laser_pose_vector; laser_pose_v];
         endfor
-
+        #display(laser_pose_v)
+        
 endfunction
 
 function Z = robot_config_f(initial_state, max_enc_values, U, kin_parameters)
@@ -161,17 +169,22 @@ endfunction
 
 
 kinematic_parameters = [0.1 0.0106141 1.4 0];
-laser_base = [1.5 0 0];
+laser_baselink = [1.5 0 0];
 max_enc_values = [8192 5000];
 #initial guess [x y theta psi]
 initial_state = [0; 0; 0];
 inc_enc_value =U(:,3);
 abs_enc_value=U(:,2);
-#T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+
+########### Plot the Uncalibrated Odometry of the Front Wheel ###########
+T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
 #plot(T(1,:),T(2,:),-'o');
 # chosen those value of axis just beacuse i've known the true trajectory from the python file provided
 #axis([-5 25 -13 2]);
 #pause(10);
+
+########### Compute the laser pose w.r.t the reference frame  ###########
+pose_laser = laser(kinematic_parameters, T, laser_baselink)
 
 #plot ground truth of the laser pose trajectory 
 #plot(U(:,7), U(:,8),-'o' ); 
@@ -180,8 +193,8 @@ abs_enc_value=U(:,2);
 #pause(10);
 
 #compute the uncalibrated odometry
-plot(U(:,4), U(:,5), 'b-', 'linewidth', 2);
-pause(10);
+#plot(U(:,4), U(:,5), 'b-', 'linewidth', 2);
+#pause(10);
 
 
 %disp('2D position of sensor w.r.t. base link');
