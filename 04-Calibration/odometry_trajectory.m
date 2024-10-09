@@ -84,13 +84,36 @@ function C=apply_odometry_correction(X, U)
         end
 end
 
-# from least square x = x + deltax
+# from gaussian newton method x = x + deltax
 # deltax is our perturbation
 # x are our kinematic parameters to be estimated by minimizing the error of the laser pose prediction
-function [e, J] = errorAndJacobian(x,U, kinematic_parameters, T, laser_baselink)
+function [e, J] = errorAndJacobian(U, kinematic_parameters, T, laser_baselink)
+        full_kin_parameters = [kinematic_parameters ; laser_baselink ];
         meas = U(:, 7:9);
         pred = laser(kinematic_parameters, T, laser_baselink);
+        n_kin_par = len(full_kinematic_parameters);
         pred_t = pred';
-        e = pred - meas;
+        e = pred - meas; 
+        # size J depends on x
+        J = zeros(3, n_kin_par);
+        for i=1:n_kin_par
+            # here need to add/subtract perturbation to the kin parameters as a vector
+            J(:,i) = laser(kinematic_parameters + epsilon, T, laser_baselink) - laser(kinematic_parameters - epsilon, T, laser_baselink);
+        endfor
+        J/=2e-3;
+endfunction        
 
+function [kin_par, c] = LS(U, kinematic_parameters, T, laser_baselink)
+        H = zeros();
+        b = zeros();
+        c = 0;
+        for i=1:(size(U,1))
+            [e, J] = errorAndJacobian(U, kinematic_parameters, T, laser_baselink);
+            H += J' * J;
+            b += J' * e;
+            c += e' * e;
+        endfor
+        delta_x = -(pinv(H))/b;
+        kin_par += delta_x;
+endfunction
 
