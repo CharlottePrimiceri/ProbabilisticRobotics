@@ -83,3 +83,14 @@ function C=apply_odometry_correction(X, U)
             C(i,:)=uc;
         end
 end
+
+# from least square x = x + deltax
+# deltax is our perturbation
+# x are our kinematic parameters to be estimated by minimizing the error of the laser pose prediction
+function [e, J] = errorAndJacobian(x,U, kinematic_parameters, T, laser_baselink)
+        meas = U(:, 7:9);
+        pred = laser(kinematic_parameters, T, laser_baselink);
+        pred_t = pred';
+        e = pred - meas;
+
+
