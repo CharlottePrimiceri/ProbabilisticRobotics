@@ -170,6 +170,7 @@ endfunction
 
 kinematic_parameters = [0.1 0.0106141 1.4 0];
 laser_baselink = [1.5 0 0];
+full_kin_parameters = [kinematic_parameters ; laser_baselink];
 max_enc_values = [8192 5000];
 #initial guess [x y theta psi]
 initial_state = [0; 0; 0];
@@ -177,31 +178,34 @@ inc_enc_value =U(:,3);
 abs_enc_value=U(:,2);
 
 ########### Plot the Uncalibrated Odometry of the Front Wheel ###########
-T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+#T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
 #plot(T(1,:),T(2,:),-'o');
 # chosen those value of axis just beacuse i've known the true trajectory from the python file provided
 #axis([-5 25 -13 2]);
 #pause(10);
 
 ########### Compute the laser pose w.r.t the reference frame  ###########
-pose_laser = laser(kinematic_parameters, T, laser_baselink)
+#pose_laser = laser(kinematic_parameters, T, laser_baselink)
 
-#plot ground truth of the laser pose trajectory 
+########### Plot the Ground Truth 2D Laser Pose Trajectory ###########
 #plot(U(:,7), U(:,8),-'o' ); 
-# chosen those value of axis just because i've known the true trajectory from the python file provided
 #axis([-5 4 -4 2]);
 #pause(10);
 
-#compute the uncalibrated odometry
+########### Plot the Ground Truth Uncalibrated Odometry of the Front Wheel ###########
+#display(U(:, 4:6))
 #plot(U(:,4), U(:,5), 'b-', 'linewidth', 2);
 #pause(10);
 
+########### Display Calibrated Kinematic Parameters ###########
+#display('Calibrated Kinematic Parameters')
+calibrated_kin_parameter = LS(U, kinematic_parameters, T, laser_baselink)
+display(calibrated_kin_parameter);
+calibrated_firstKin_parameters = calibrated_kin_parameter(1:4);
+calibrate_laser_baselink = calibrated_kin_parameter (5:7);
 
-%disp('2D position of sensor w.r.t. base link');
-%S = function1();
-%disp(S);
-%pause(1);
-
-%disp('kinematic parameters');
-%P = function2();
-%disp(P);
+########### Plot Calibrated 2D Laser Pose Trajectory ###########
+#display('Calibrated 2D Laser Pose Trajectory')
+calibrated_pose_laser = laser(calibrated_firstKin_parameters, T, calibrate_laser_baselink)
+#plot(calibrated_pose_laser(1,:),calibrated_pose_laser(2,:),-'o');
+%pause(10);
