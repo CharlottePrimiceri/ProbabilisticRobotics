@@ -4,7 +4,7 @@ clear
 clc
 #import 2d geometry utils
 source "../tools/utilities/geometry_helpers_2d.m"
-source "../04-Calibration/odometry_trajectory.m"
+#source "../04-Calibration/odometry_trajectory.m"
 #source "../04-Calibration/tricycle.m"
 disp('loading the matrix');
 path = 'dataset.txt';
@@ -52,7 +52,7 @@ endfunction
 ###ctrl k u ctrl k c commentare scommentae 
 #+str{variabile_nome}+
 U = read_odometry(path);
-display(size(U))
+display(size(U));
 
 function dataset_time=reset_time(U)
 
@@ -78,8 +78,8 @@ function dataset_time=reset_time(U)
 
 endfunction
 
-U = reset_time(U)
-display(U(:,1))
+U = reset_time(U);
+display(U(:,1));
 
 function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
                                                  initial_state, steering_ticks, max_enc_values, kin_parameters)
@@ -127,9 +127,12 @@ function laser_pose = laser(kin_parameters, front_odometry, laser_base)
         #display(laser_base)
         T_laser_base = v2t(laser_base);
         laser_pose_vector = [];
-        n = size(front_odometry, 2);
-        display(n)
+        #n = size(front_odometry, 2);
+        n = length(front_odometry(1,:));
+        #display(n)
         for i = 1:n
+        #display('front_odometry')
+        #display(front_odometry)
             rear_x = front_odometry(1, i) + axis_lenght*cos(front_odometry(3,i));
             rear_y = front_odometry(2, i) + axis_lenght*sin(front_odometry(3,i));
             rear_pose = [rear_x; rear_y; front_odometry(3,i)];
@@ -168,9 +171,9 @@ function Z = robot_config_f(initial_state, max_enc_values, U, kin_parameters)
 endfunction
 
 
-kinematic_parameters = [0.1 0.0106141 1.4 0];
-laser_baselink = [1.5 0 0];
-full_kin_parameters = [kinematic_parameters ; laser_baselink];
+kinematic_parameters = [0.1; 0.0106141; 1.4; 0];
+laser_baselink = [1.5; 0; 0];
+full_kin_parameters = [kinematic_parameters; laser_baselink];
 max_enc_values = [8192 5000];
 #initial guess [x y theta psi]
 initial_state = [0; 0; 0];
@@ -178,13 +181,14 @@ inc_enc_value =U(:,3);
 abs_enc_value=U(:,2);
 
 ########### Plot the Uncalibrated Odometry of the Front Wheel ###########
-#T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
 #plot(T(1,:),T(2,:),-'o');
-# chosen those value of axis just beacuse i've known the true trajectory from the python file provided
 #axis([-5 25 -13 2]);
 #pause(10);
-
-########### Compute the laser pose w.r.t the reference frame  ###########
+#save myfile.mat T
+#T = load('myfile.mat');
+#display(T)
+########### Display the laser pose w.r.t the reference frame  ###########
 #pose_laser = laser(kinematic_parameters, T, laser_baselink)
 
 ########### Plot the Ground Truth 2D Laser Pose Trajectory ###########
@@ -199,13 +203,98 @@ abs_enc_value=U(:,2);
 
 ########### Display Calibrated Kinematic Parameters ###########
 #display('Calibrated Kinematic Parameters')
-calibrated_kin_parameter = LS(U, kinematic_parameters, T, laser_baselink)
-display(calibrated_kin_parameter);
-calibrated_firstKin_parameters = calibrated_kin_parameter(1:4);
-calibrate_laser_baselink = calibrated_kin_parameter (5:7);
+% calibrated_kin_parameter, chi = LS(U, kinematic_parameters, T, laser_baselink)
+% display(calibrated_kin_parameter);
+% calibrated_firstKin_parameters = calibrated_kin_parameter(1:4);
+% calibrate_laser_baselink = calibrated_kin_parameter (5:7);
 
 ########### Plot Calibrated 2D Laser Pose Trajectory ###########
 #display('Calibrated 2D Laser Pose Trajectory')
-calibrated_pose_laser = laser(calibrated_firstKin_parameters, T, calibrate_laser_baselink)
+#calibrated_pose_laser = laser(calibrated_firstKin_parameters, T, calibrate_laser_baselink)
 #plot(calibrated_pose_laser(1,:),calibrated_pose_laser(2,:),-'o');
-%pause(10);
+#pause(10);
+
+function [e, J] = errorAndJacobian(U, kine_parameters, T, laser_baselink)
+        full_kin_parameters = [kine_parameters; laser_baselink];
+        meas = U(:, 7:8);
+        pred = laser(kine_parameters, T, laser_baselink);
+        #display('pred')
+        #display(pred)
+        pred_xy = pred(1:2, :);
+        n_kin_par = length(full_kin_parameters);
+        #pred_t = pred_xy';
+        #display('cose nuoveeee')
+        #display(meas)
+        #display(pred_xy )
+        e = pred_xy - meas'; 
+        #display('errorrrr')
+        #display(e)
+        # size J depends on x
+        J = zeros(2, n_kin_par);
+        for i=1:n_kin_par
+            epsilon = zeros(7,1);
+            epsilon(i)=1e-3;
+            #display('epsilon')
+            #display(epsilon)
+            #display(epsilon(1:4))
+            #display('kine_paramters')
+            #display(kine_parameters)
+            #display(kine_parameters+epsilon(1:4))
+            primo = laser(kine_parameters + epsilon(1:4), T, laser_baselink + epsilon(5:7));
+            #display('primo')
+            #display(primo)
+            #display('secondo')
+            secondo = laser(kine_parameters - epsilon(1:4), T, laser_baselink + epsilon(5:7));
+            #display(secondo)
+            difference = primo(1:2) - secondo(1:2);
+            #display('difference')
+            #display(difference)
+            #display(size(primo))
+            #display(size(secondo))
+            J(:,i) = difference;
+            #display(J(:,i))
+            #J(:,i) = laser(kine_parameters + epsilon(1:4), T, laser_baselink + epsilon(5:7)) - laser(kine_parameters - epsilon(1:4), T, laser_baselink + epsilon(5:7));
+        endfor
+        J/=2e-3;
+endfunction        
+
+function [kin_par, c] = LS(U, k_parameters, T, laser_baselink_parameters)
+        full_kin_parameters = [k_parameters; laser_baselink_parameters];
+        n_kin_par = length(full_kin_parameters);
+        H = zeros(n_kin_par, n_kin_par);
+        b = zeros(n_kin_par, 1);
+        c = 0;
+        for i=1:(size(U,1))
+            #display('size (U,1)')
+            #display(size(U,1))
+            #display(T(:, i))
+            #display('T(:, i)')
+            [e, J] = errorAndJacobian(U(i, :), k_parameters, T(:, i), laser_baselink_parameters);
+            H += J' * J;
+            b += J' * e;
+            c += e' * e;
+        endfor
+        delta_x = -(pinv(H))*b;
+        display('delta_x')
+        display(delta_x)
+        full_kin_parameters += delta_x;
+        kin_par = full_kin_parameters;
+endfunction
+
+#display(length(T(:,)))
+########### Display Calibrated Kinematic Parameters ###########
+#display('Calibrated Kinematic Parameters')
+n=5;
+function calibrated_kin_parameter = roundls(U, kinematic_parameters, T, laser_baselink)
+        for i=1:n
+            parameters = LS(U, kinematic_parameters, T, laser_baselink);
+            kinematic_parameters = parameters(1:4)
+            laser_baselink = parameters(5:7)
+        endfor
+        calibrated_kin_parameter = [kinematic_parameters; laser_baselink]
+endfunction
+#calibrated_kin_parameter = LS(U, kinematic_parameters, T, laser_baselink);
+final_result = roundls(U, kinematic_parameters, T, laser_baselink)
+display(final_result)
+calibrated_firstKin_parameters = final_result(1:4)
+calibrate_laser_baselink = final_result(5:7)
