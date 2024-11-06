@@ -78,6 +78,10 @@ Find the output:
 ### Laser pose w.r.t base link
 
 - The laser transformation w.r.t. the reference frame of the robot is given by the transformation:\
-$T_{laser}^{reference} = T_{rear-pose}^{reference} \cdot T_{laser}^{base} \$
+  $T_{laser}^{reference} = T_{rear_pose}^{reference} \cdot T_{laser}^{baselink} \$
+  The last term is the pose of the laser with respect the rear wheel frame. 
+  $T_{laser}^{baselink} = (T_{laser}^{baselink})^{-1} \cdot T_{laser}^{reference} \$
 
-The last term is the offset position of the laser with respect the 
+### Kinematics parameters for Calibrated Trajectory
+  
+- 
