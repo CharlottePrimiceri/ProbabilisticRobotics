@@ -91,6 +91,6 @@ Find the output:
    $y_{rear} = y_{rear} + sin(\theta) $\
   Apply the pure rolling constraint:  
    $\dot{x_{front}} sin(\theta + \psi) - \dot y_{front} cos(\theta + \psi) = 0$\
-   $ \dot{x_{rear}} sin(\theta) - \dot{y_{rear}} cos(\theta) = 0$\
+   $\dot{x_{rear}} sin(\theta) - \dot{y_{rear}} cos(\theta) = 0$\
   Substiting the first two equations in the last one we obtain:\
-   $\dot{x_{front}} sin(\theta) - \dot{y_{front}} cos(\theta ) + \dot{\theta} l = 0$\ 
+   $(\dot{x})_{front} sin(\theta) - \dot{y_{front}} cos(\theta ) + \dot{\theta} l = 0$
