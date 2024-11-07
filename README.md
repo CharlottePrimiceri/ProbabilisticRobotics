@@ -93,4 +93,4 @@ Find the output:
    $\dot{x_{front}} sin(\theta + \psi) - \dot y_{front} cos(\theta + \psi) = 0$\
    $\dot{x_{rear}} sin(\theta) - \dot{y_{rear}} cos(\theta) = 0$\
   Substiting the first two equations in the last one we obtain:\
-   $\dot{x}_{\text{front}} sin(\theta) - \dot{y_{front}} cos(\theta ) + \dot{\theta} l = 0$
+   $\dot{x_{front}} sin(\theta) - \dot{y_{front}} cos(\theta ) + \dot{\theta} l = 0$
