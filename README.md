@@ -84,10 +84,10 @@ Find the output:
 
 ### Kinematics parameters for Calibrated Trajectory
   
-- Drawing the model of the tricycle we can obtain the pose of the front wheel.
+- Drawing the model of the tricycle we can obtain the   pose of the front wheel.
    ![Figure 5](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg)
 
-  The configuration state is q = [x; y; $\theta$ ; $\psi$].  
+  The configuration state is q = [$x_{front}$; $y_{front}$; $\theta$ ; $\psi$].  
   (3) $x_{front} = x_{rear} + cos(\theta) $\
   (4) $y_{rear} = y_{rear} + sin(\theta) $\
   Consider the pure rolling constraint for the front wheel and for the rear wheels consider the midpoint of the axe that connects them:\
@@ -99,4 +99,14 @@ Find the output:
   (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\ 
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
   We need to find g_{1} and g_{2}, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.\
-  $\begin{bmatrix}A1 &A2 & A3\\A4 & A5 & A6 \end{bmatrix}$
+  ![Figure 6](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model.jpg)
+
+  ![Figure 7](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg)
+
+  The driving velocity is computed through the incremental encoder information by multiplying the number of its ticks, in each time stamp, for the value of meters corresponding to one single tick:\ 
+  traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max))\
+  While the steering velocity is computed through the absolute encoder by multiplying the number of its ticks, in each time stamp, to the value of radians (converted from revolution to radians with a factor 2pi) corresponding to one single tick. Then add the steering offset. The absolute encoder includes both positive and negative angles, so is the ticks are more than the half value of the maximum steering, we'll have negative angles:\
+  steer_angle = - (ticks_to_radians * (steer_max - steering_ticks)*2*pi/(steer_max)) + steer_offset\
+  Otherwhise we'll have positive angles:\
+  steer_angle = (ticks_to_radians * steering_ticks *pi *2 / (steer_max)) + steer_offset\
+  
