@@ -100,7 +100,7 @@ Find the output:
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
   We need to find g_{1} and g_{2}, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.\
   ![Figure 6](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model.jpg)
-  <img src="![image-url](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg)" alt="Figure 7" width="100" height="100">
+  ![Figure 7](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg){: width="50%"}
 
 
   The driving velocity is computed through the incremental encoder information by multiplying the number of its ticks, in each time stamp, for the value of meters corresponding to one single tick:\ 
