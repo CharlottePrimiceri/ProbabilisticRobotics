@@ -100,15 +100,3 @@ Find the output:
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
   We need to find g_{1} and g_{2}, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.\
   $\begin{bmatrix}A1 &A2 & A3\\A4 & A5 & A6 \end{bmatrix}$
-
-  $ \begin{pmatrix}
-    sin(\theta +\psi) & cos(\theta + \psi) & 0 & 0\\
-    sin(\theta) & -cos(\theta) & l & 0
-    \end{pmatrix} $\
-    
-    \begin{pmatrix}
-    \dot x\\
-    \dot y\\
-    \dot \theta\\
-    \dot \psi\\
-    \end{pmatrix} $
