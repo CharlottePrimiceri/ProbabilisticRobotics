@@ -229,7 +229,7 @@ endfunction
 #try not to use separated functions and put all together in the main
 # One Iteration of Least Squares
 dataset_size = size(U,1);
-epsilon = 1e-03;
+epsilon = 1e-04;
 n_kin_parameters = size(kinematic_parameters);
 # compute the laser pose with the initial guess of kinematic parameters
 T_pred = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
@@ -279,6 +279,7 @@ for i=1:dataset_size
         Jacobian(3, k) = angles_difference(laser_plus_i(:,3), laser_minus_i(:,3));
         first_k_laser_values += dataset_size;
     endfor
+    #scale the gradient
     Jacobian = Jacobian *(0.5/epsilon);
     #display(Jacobian) 
     H += Jacobian' * Jacobian;
