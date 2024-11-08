@@ -99,23 +99,7 @@ Find the output:
   (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\ 
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
   We need to find g_{1} and g_{2}, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.\
-  $$
-  A \vec{x} = \begin{bmatrix}
-  1 & 2 & 3 \\
-  4 & 5 & 6 \\
-  7 & 8 & 9 \\
-  \end{bmatrix}
-  \begin{bmatrix}
-  x_1 \\
-  x_2 \\
-  x_3 \\
-  \end{bmatrix}
-  = \begin{bmatrix}
-  0 \\
-  0 \\
-  0 \\
-  \end{bmatrix}
-  $$
+  $\begin{bmatrix}A1 &A2 & A3\\A4 & A5 & A6 \end{bmatrix}$
 
   $ \begin{pmatrix}
     sin(\theta +\psi) & cos(\theta + \psi) & 0 & 0\\
