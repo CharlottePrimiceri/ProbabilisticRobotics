@@ -89,16 +89,29 @@ Find the output:
 
   The configuration state is q = [x; y; $\theta$ ; $\psi$].  
   (3) $x_{front} = x_{rear} + cos(\theta) $\
-  (4) $y_{rear} = y_{rear} + sin(\theta) $\\
+  (4) $y_{rear} = y_{rear} + sin(\theta) $\
   Consider the pure rolling constraint for the front wheel and for the rear wheels consider the midpoint of the axe that connects them:\
   (5) $\dot x_{front} sin(\theta + \psi) - \dot y_{front} cos(\theta + \psi) = 0$\
-  (6) $\dot x_{rear} sin(\theta) - \dot y_{rear} cos(\theta) = 0$\\
+  (6) $\dot x_{rear} sin(\theta) - \dot y_{rear} cos(\theta) = 0$\
   Substitute the first two equations in the last one:\
-  (7) $\dot x_{front} sin(\theta) - \dot y_{front} cos(\theta ) + \dot{\theta} l = 0$\\
+  (7) $\dot x_{front} sin(\theta) - \dot y_{front} cos(\theta ) + \dot{\theta} l = 0$\
   The relationship between the state and the input is defined by the kinematic model:\
-  (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\\ 
+  (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\ 
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
   We need to find g_{1} and g_{2}, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.\
+  \[
+  A = \begin{bmatrix}
+  1 & 2 & 3 \\
+  4 & 5 & 6 \\
+  7 & 8 & 9 \\
+  \end{bmatrix}, \quad
+  \vec{x} = \begin{bmatrix}
+  x_1 \\
+  x_2 \\
+  x_3 \\
+  \end{bmatrix}
+  \]
+  
   $ \begin{pmatrix}
     sin(\theta +\psi) & cos(\theta + \psi) & 0 & 0\\
     sin(\theta) & -cos(\theta) & l & 0
