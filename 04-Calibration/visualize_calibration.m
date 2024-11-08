@@ -220,8 +220,8 @@ abs_enc_value=U(:,2);
 
 #Normalize Angles to do difference
 function angle_difference = angles_difference(theta_1, theta_2)
-    norm_theta_first = mod(theta_1 + pi, 2 * pi) - pi;
-    norm_theta_second = mod(theta_2 + pi, 2 * pi) - pi;
+    norm_theta_1 = mod(theta_1 + pi, 2 * pi) - pi;
+    norm_theta_2 = mod(theta_2 + pi, 2 * pi) - pi;
     difference = norm_theta_1 - norm_theta_2;
     angle_difference = mod(difference + pi, 2 * pi) - pi;
 endfunction
@@ -232,24 +232,58 @@ dataset_size = size(U,1);
 epsilon = 1e-04;
 n_kin_parameters = size(kinematic_parameters);
 # compute the laser pose with the initial guess of kinematic parameters
-#T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
-#laser = laser(kinematic_parameters, T);
+T_pred = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+laser_pred = laser(kinematic_parameters, T_pred);
 # add perturbation
 perturbation = zeros(n_kin_parameters, 1);
 laser_all_kin_plus = [];
 laser_all_kin_minus = [];
-for i = 1:n_kin_parameters
-    perturbation(i) = epsilon; 
-    front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-    front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-    laser_plus = laser(kinematic_parameters, front_plus);
-    laser_minus = laser(kinematic_parameters, front_minus);
-    # remember to reset to zero this vector so to perturb only one parameter 
-    perturbation(i) = 0;
-    laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
-    laser_all_kin_minus = [laser_all_kin_minus;laser_minus];
-    display(size(laser_all_kin_plus));
+% for i = 1:n_kin_parameters
+%     perturbation(i) = epsilon; 
+%     front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
+%     front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
+%     laser_plus = laser(kinematic_parameters, front_plus);
+%     laser_minus = laser(kinematic_parameters, front_minus);
+%     # remember to reset to zero this vector so to perturb only one parameter 
+%     perturbation(i) = 0;
+%     laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
+%     laser_all_kin_minus = [laser_all_kin_minus;laser_minus];
+%     display(size(laser_all_kin_plus));
+% endfor
+delta_x = zeros(n_kin_parameters);
+H = zeros(n_kin_parameters, n_kin_parameters);
+b = zeros(n_kin_parameters, 1);
+c = 0;
+for i=1:dataset_size
+    #Compute the error
+    error = zeros(3,1);
+    pred = laser_pred(i,:);
+    meas = U(i, 7:9);
+    error(1:2, 1) = pred(:, 1:2) - meas(:, 1:2);
+    error(3, 1) = angles_difference(pred(:, 3), meas(:, 3)); 
+    #Compute the Jacobian
+    Jacobian = zeros(3, 7);    
+    for k=1:7
+        perturbation(k) = epsilon; 
+        front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
+        front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
+        laser_plus = laser(kinematic_parameters, front_plus);
+        laser_minus = laser(kinematic_parameters, front_minus);
+        # remember to reset to zero this vector so to perturb only one parameter 
+        perturbation(k) = 0;
+        laser_plus_i = laser_plus(i,:);
+        #display(size(laser_plus_i))
+        laser_minus_i = laser_minus(i,:);
+        Jacobian(1:2, k) = laser_plus_i(:,1:2) - laser_minus_i(:,1:2);
+        Jacobian(3, k) = angles_difference(laser_plus_i(:,3), laser_minus_i(:,3));
+    endfor
+    Jacobian = Jacobian *(0.5/epsilon);
+    #display(size(Jacobian)) 3 7 ok
+    H += Jacobian' * Jacobian;
+    b += Jacobian' * error;
+    c += error' * error;
 endfor
+
 
 % function [f_p, f_m, l_p, l_m] = addPerturbation(initial_state, max_enc_values, U, kinn_parameters)
 %         for i=1:n_kin_par
