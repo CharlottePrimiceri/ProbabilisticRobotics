@@ -225,7 +225,7 @@ function angle_difference = angles_difference(theta_1, theta_2)
 endfunction
 
 #try not to use separated functions and put all together in the main
-
+# One Iteration of Least Squares
 dataset_size = size(U,1);
 epsilon = 1e-04;
 n_kin_parameters = size(kinematic_parameters);
@@ -238,9 +238,10 @@ for i = 1:n_kin_parameters
     perturbation(i) = epsilon; 
     front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
     front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-    laser_plus = laser(kin_parameters, front_odometry);
-    laser_minus = laser(kin_parameters, front_odometry);
-
+    laser_plus = laser(kin_parameters, front_plus);
+    laser_minus = laser(kin_parameters, front_minus);
+    # remember to reset to zero this vector so to perturb only one parameter 
+    perturbation(i) = 0;
 endfor
 
 % function [f_p, f_m, l_p, l_m] = addPerturbation(initial_state, max_enc_values, U, kinn_parameters)
