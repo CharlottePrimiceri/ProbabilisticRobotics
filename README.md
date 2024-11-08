@@ -18,7 +18,7 @@
   
   translation: [1.5, 0, 0]
   
-  rotation: [0, 0, 0, 1]\
+  rotation: [0, 0, 0, 1]
  
   so the laser position and orientation w.r.t. the base link is [x y theta]=[1.5 0 0]
 
@@ -48,13 +48,13 @@ Find the output:
 - Time Values:
 
   Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain:\
-  eps(1.6e+09) = 2.38e-07.\ 
+  eps(1.6e+09) = 2.38e-07. 
   So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) then it would be lost. 
 
 - How to deal with Overflow?
 
   As it is suggested, the reading of the incremental encoder, is stored in an uint32 variable which has a maximum range of 4294967295. 
-  So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as:\
+  So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as:
   ``` 
   overflow_delta = overflow_max_value - previous_tick_value + new_tick_value
   ```
@@ -85,7 +85,7 @@ Find the output:
 - Drawing the model of the tricycle we can obtain the pose of the front wheel.
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="400" height="350">
 
-  The configuration state is q = [$x_{front}$; $y_{front}$; $\theta$ ; $\psi$].  
+  The configuration state is q = [$x_{front}$  $y_{front}$ $\theta$ $\psi$].  
   (3) $x_{front} = x_{rear} + cos(\theta) $\
   (4) $y_{rear} = y_{rear} + sin(\theta) $\
   Consider the pure rolling constraint for the front wheel and for the rear wheels consider the midpoint of the axe that connects them:\
@@ -140,7 +140,7 @@ Jacobian(1:2, k) = laser_plus_i(:, 1:2) - laser_minus_i(:, 1:2)
 ```
 Accordingly, the Jacobian needs to be scaled wrt the perturbation (so divide it by epsilon) and multiplied 1/2 bacause of a factor of 2 in the gradient of the error function. 
 The kinematic parameters found in that case are:\
-kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.0261e-01  -9.7755e-01  -1.3441e-01]\
+kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.0261e-01  -9.7755e-01  -1.3441e-01]
 
 - 
 
