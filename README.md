@@ -77,8 +77,8 @@ Find the output:
 
 - The laser transformation w.r.t. the reference frame of the robot is given by the transformation:\
   (1) $T_{laser}^{reference} = T_{rear_pose}^{reference} \cdot T_{laser}^{baselink}$\
-  The last term is the pose of the laser with respect the rear wheel frame.\ 
-  (2) $T_{laser}^{baselink} = (T_{laser}^{baselink})^{-1} \cdot T_{laser}^{reference}$\
+  The last term is the pose of the laser with respect the rear wheel frame. 
+  (2) $T_{laser}^{baselink} = (T_{laser}^{baselink})^{-1} \cdot T_{laser}^{reference}$
 
 ### Kinematic Model of Front-Tractor Tricycle
   
@@ -116,10 +116,10 @@ Find the output:
   steer_angle = (ticks_to_radians * steering_ticks *pi *2 / (steer_max)) + steer_offset
 
   Given this the Predicted Uncalibrated Odometry of the front wheel is:
-  ![Figure_4](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/predicted_uncalibrated_odometry.png) 
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/predicted_uncalibrated_odometry.png">
 
   ```
-  Because there are negative angles we need to normalize the angles values when computing subtractions. First normalize the single angles within $-\pi$ and $\pi$ and then also the difference between each other:\
+  Because there are negative angles we need to normalize the angles values when computing subtractions. First normalize the single angles within $-\pi$ and $\pi$ and then also the difference between each other:
   ```
   norm_theta_first = mod(theta_1 + pi, 2 * pi) - pi;
   ```
