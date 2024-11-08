@@ -179,19 +179,21 @@ endfunction
 
 kinematic_parameters = [0.1; 0.0106141; 1.4; 0; 1.5; 0; 0];
 max_enc_values = [8192 5000];
-initial_state = [0; 0; 0];
+initial_state = [1.5; 0; 0];
 inc_enc_value =U(:,3);
 abs_enc_value=U(:,2);
+
 ########### Plot the Uncalibrated Odometry of the Front Wheel ###########
-#T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
-#plot(T(1,:),T(2,:),-'o');
-#axis([-5 25 -13 2]);
-#pause(10);
-#save myfile.mat T
-#T = load('myfile.mat');
-#display(T)
-########### Display the laser pose w.r.t the reference frame  ###########
-#pose_laser = laser(kinematic_parameters, T, laser_baselink)
+% T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+% plot(T(1,:),T(2,:),-'o');
+% axis([-5 25 -13 2]);
+% pause(10);
+
+########### Display and Plot the laser pose w.r.t the baselink  ###########
+% pose_laser = laser(kinematic_parameters, T);
+% plot(pose_laser(:,1),pose_laser(:,2),-'o');
+% axis([-5 25 -13 2]);
+% pause(10);
 
 ########### Plot the Ground Truth 2D Laser Pose Trajectory ###########
 #plot(U(:,7), U(:,8),-'o' ); 
@@ -200,8 +202,8 @@ abs_enc_value=U(:,2);
 
 ########### Plot the Ground Truth Uncalibrated Odometry of the Front Wheel ###########
 #display(U(:, 4:6))
-#plot(U(:,4), U(:,5), 'b-', 'linewidth', 2);
-#pause(10);
+% plot(U(:,4), U(:,5), 'b-', 'linewidth', 2);
+% pause(10);
 
 ########### Display Calibrated Kinematic Parameters ###########
 #display('Calibrated Kinematic Parameters')
@@ -230,18 +232,23 @@ dataset_size = size(U,1);
 epsilon = 1e-04;
 n_kin_parameters = size(kinematic_parameters);
 # compute the laser pose with the initial guess of kinematic parameters
-T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
-laser = laser(kinematic_parameters, T);
+#T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+#laser = laser(kinematic_parameters, T);
 # add perturbation
 perturbation = zeros(n_kin_parameters, 1);
+laser_all_kin_plus = [];
+laser_all_kin_minus = [];
 for i = 1:n_kin_parameters
     perturbation(i) = epsilon; 
     front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
     front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-    laser_plus = laser(kin_parameters, front_plus);
-    laser_minus = laser(kin_parameters, front_minus);
+    laser_plus = laser(kinematic_parameters, front_plus);
+    laser_minus = laser(kinematic_parameters, front_minus);
     # remember to reset to zero this vector so to perturb only one parameter 
     perturbation(i) = 0;
+    laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
+    laser_all_kin_minus = [laser_all_kin_minus;laser_minus];
+    display(size(laser_all_kin_plus));
 endfor
 
 % function [f_p, f_m, l_p, l_m] = addPerturbation(initial_state, max_enc_values, U, kinn_parameters)
