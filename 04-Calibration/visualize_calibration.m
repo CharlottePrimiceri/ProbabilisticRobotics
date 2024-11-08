@@ -229,7 +229,7 @@ endfunction
 #try not to use separated functions and put all together in the main
 # One Iteration of Least Squares
 dataset_size = size(U,1);
-epsilon = 1e-04;
+epsilon = 1e-03;
 n_kin_parameters = size(kinematic_parameters);
 # compute the laser pose with the initial guess of kinematic parameters
 T_pred = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
@@ -238,18 +238,20 @@ laser_pred = laser(kinematic_parameters, T_pred);
 perturbation = zeros(n_kin_parameters, 1);
 laser_all_kin_plus = [];
 laser_all_kin_minus = [];
-% for i = 1:n_kin_parameters
-%     perturbation(i) = epsilon; 
-%     front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-%     front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-%     laser_plus = laser(kinematic_parameters, front_plus);
-%     laser_minus = laser(kinematic_parameters, front_minus);
-%     # remember to reset to zero this vector so to perturb only one parameter 
-%     perturbation(i) = 0;
-%     laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
-%     laser_all_kin_minus = [laser_all_kin_minus;laser_minus];
-%     display(size(laser_all_kin_plus));
-% endfor
+
+for i = 1:n_kin_parameters
+    perturbation(i) = epsilon; 
+    front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + perturbation);
+    front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters - perturbation);
+    laser_plus = laser(kinematic_parameters + perturbation, front_plus);
+    laser_minus = laser(kinematic_parameters - perturbation, front_minus);
+    # remember to reset to zero this vector so to perturb only one parameter 
+    perturbation(i) = 0; 
+    laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
+    laser_all_kin_minus = [laser_all_kin_minus;laser_minus];
+    #display(size(laser_all_kin_plus));
+endfor
+
 delta_x = zeros(n_kin_parameters);
 H = zeros(n_kin_parameters, n_kin_parameters);
 b = zeros(n_kin_parameters, 1);
@@ -261,29 +263,34 @@ for i=1:dataset_size
     meas = U(i, 7:9);
     error(1:2, 1) = pred(:, 1:2) - meas(:, 1:2);
     error(3, 1) = angles_difference(pred(:, 3), meas(:, 3)); 
+    #display(size(error))
     #Compute the Jacobian
-    Jacobian = zeros(3, 7);    
+    Jacobian = zeros(3, 7); 
+    first_k_laser_values = 1;   
     for k=1:7
-        perturbation(k) = epsilon; 
-        front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-        front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + epsilon);
-        laser_plus = laser(kinematic_parameters, front_plus);
-        laser_minus = laser(kinematic_parameters, front_minus);
-        # remember to reset to zero this vector so to perturb only one parameter 
-        perturbation(k) = 0;
-        laser_plus_i = laser_plus(i,:);
-        #display(size(laser_plus_i))
-        laser_minus_i = laser_minus(i,:);
-        Jacobian(1:2, k) = laser_plus_i(:,1:2) - laser_minus_i(:,1:2);
+        last_k_laser_values = (first_k_laser_values + dataset_size)-1;
+        laser_all_kin_plus_k = laser_all_kin_plus(first_k_laser_values:last_k_laser_values, :);
+        #display(laser_all_kin_plus_k)
+        laser_all_kin_minus_k = laser_all_kin_minus(first_k_laser_values:last_k_laser_values, :);
+        laser_plus_i = laser_all_kin_plus_k(i,:);
+        laser_minus_i = laser_all_kin_minus_k(i,:);
+        Jacobian(1:2, k) = laser_plus_i(:, 1:2) - laser_minus_i(:, 1:2);
+        #display(Jacobian(1:2, k))
         Jacobian(3, k) = angles_difference(laser_plus_i(:,3), laser_minus_i(:,3));
+        first_k_laser_values += dataset_size;
     endfor
     Jacobian = Jacobian *(0.5/epsilon);
-    #display(size(Jacobian)) 3 7 ok
+    #display(Jacobian) 
     H += Jacobian' * Jacobian;
     b += Jacobian' * error;
     c += error' * error;
 endfor
+#display(H)
+delta_x = -(pinv(H))*b;
+#display(delta_x)
 
+kin = kinematic_parameters + delta_x;
+display(kin)
 
 % function [f_p, f_m, l_p, l_m] = addPerturbation(initial_state, max_enc_values, U, kinn_parameters)
 %         for i=1:n_kin_par
@@ -404,18 +411,19 @@ endfor
 % calibrated_firstKin_parameters = final_result(1:4);
 % calibrate_laser_baselink = final_result(5:7);
 
-% T_calibrated = robot_config_f(initial_state, max_enc_values, U, calibrated_firstKin_parameters);
+T_cal = robot_config_f(initial_state, max_enc_values, U, kin);
 % #calibrated_kin_parameter = LS(U, calibrated_firstKin_parameters, T_calibrated, calibrate_laser_baselink);
 % #final_result = roundls(U, calibrated_firstKin_parameters, T_calibrated, calibrate_laser_baselink);
 % #display(final_result)
-% #ultimo_grafico = laser(calibrated_firstKin_parameters, T_calibrated, calibrate_laser_baselink)
+#ultimo_grafico = laser(kin, T_calibrated)
 % plot(T_calibrated(1,:), T_calibrated(2,:),-'o');
 % #axis([-5 4 -4 2]);
 % axis([-5 25 -13 2]);
 % pause(10);
 % ########### Plot Calibrated 2D Laser Pose Trajectory ###########
 % #display('Calibrated 2D Laser Pose Trajectory')
-% #calibrated_pose_laser = laser(calibrated_firstKin_parameters, T, calibrate_laser_baselink);
-% #plot(calibrated_pose_laser(1,:),calibrated_pose_laser(2,:),-'o');
-% #axis([-5 25 -13 2]);
-% #pause(10);
+calibrated_pose_laser = laser(kin, T_cal);
+plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
+axis([-5 4 -4 2]);
+#axis([-5 25 -13 2]);
+pause(10);
