@@ -85,7 +85,7 @@ Find the output:
 ### Kinematics parameters for Calibrated Trajectory
   
 - Drawing the model of the tricycle we can obtain the   pose of the front wheel.
-   ![Figure 5](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg)
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="350" height="350">
 
   The configuration state is q = [$x_{front}$; $y_{front}$; $\theta$ ; $\psi$].  
   (3) $x_{front} = x_{rear} + cos(\theta) $\
@@ -102,9 +102,8 @@ Find the output:
 
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model.jpg" width="500" height="500">
 
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg" width="500" height="500">
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg" width="350" height="350">
   
-
 
   The driving velocity is computed through the incremental encoder information by multiplying the number of its ticks, in each time stamp, for the value of meters corresponding to one single tick:\ 
   traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max))\
