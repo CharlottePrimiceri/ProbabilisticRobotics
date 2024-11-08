@@ -108,10 +108,10 @@ Find the output:
   The driving velocity is computed through the incremental encoder information by multiplying the number of its ticks, in each time stamp, for the value of meters corresponding to one single tick:\ 
   traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max))\
   While the steering velocity is computed through the absolute encoder by multiplying the number of its ticks, in each time stamp, to the value of radians (converted from revolution to radians with a factor 2pi) corresponding to one single tick. Then add the steering offset. The absolute encoder includes both positive and negative angles, so is the ticks are more than the half value of the maximum steering, we'll have negative angles:\
-  '''
+  ```
   steer_angle = - (ticks_to_radians * (steer_max - steering_ticks)*2*pi/(steer_max)) + steer_offset\
-  '''
+  ```
   Otherwhise we'll have positive angles:\
-  '''
+  ```
   steer_angle = (ticks_to_radians * steering_ticks *pi *2 / (steer_max)) + steer_offset\
-  '''
+  ```
