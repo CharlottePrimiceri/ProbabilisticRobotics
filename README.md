@@ -96,7 +96,7 @@ Find the output:
   The relationship between the state and the input is defined by the kinematic model:\
   (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\ 
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
-  We need to find $g_{1}$ and $g_{2}$, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.\
+  We need to find $g_{1}$ and $g_{2}$, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.
 
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model.jpg" width="500" height="500">
 
@@ -118,12 +118,32 @@ Find the output:
   ```
   Given this the Predicted Uncalibrated Odometry of the front wheel is:
 
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/predicted_uncalibrated_odometry.png">
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/front_wheel_uncalibrated_pose.png">
 
   Because there are negative angles we need to normalize the angles values when computing subtractions. First normalize the single angles within $-\pi$ and $\pi$ and then also the difference between each other:
   ```
-  norm_theta_first = mod(theta_1 + pi, 2 * pi) - pi;
+  norm_theta_1 = mod(theta_1 + pi, 2 * pi) - pi;
   ```
 ### Least Squares
 
-- Apply the 
+- 1 iteration of the least squares algorithm: consider the whole dataset with epsilon = 1e-04. The error is computed as the difference between the predicted pose of the laser wrt the baselink and its true pose. To find the kinematic parameters which minimize this error we need to perturb each one of their initial guess by adding and substracting an epsilon value:
+```
+front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + perturbation)
+```
+```
+laser_plus = laser(kinematic_parameters + perturbation, front_plus)
+```
+And stack the laser pose values perturbed for each of the 7 kinematic parameters.\
+While the Jacobian (3x7 matrix) is computed as the difference between the values of the laser pose positively and negatively perturbated:
+```
+Jacobian(1:2, k) = laser_plus_i(:, 1:2) - laser_minus_i(:, 1:2)
+```
+Accordingly, the Jacobian needs to be scaled wrt the perturbation (so divide it by epsilon) and multiplied 1/2 bacause of a factor of 2 in the gradient of the error function. 
+The kinematic parameters found in that case are:\
+kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.0261e-01  -9.7755e-01  -1.3441e-01]\
+
+- 
+
+  
+
+  
