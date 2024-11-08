@@ -121,10 +121,10 @@ function pose_T=predictFront_Tractor_Tricycle(traction_incremental_ticks,
 
 endfunction
 
-function laser_pose = laser(kin_parameters, front_odometry, laser_base)
+function laser_pose = laser(kin_parameters, front_odometry)
         axis_lenght = kin_parameters(3);
-        laser_base = [laser_base(1); laser_base(2); laser_base(3)];
-        laser_base_neg = [-laser_base(1); -laser_base(2); -laser_base(3)];
+        laser_base = [kin_parameters(5), kin_parameters(6), kin_parameters(7)];
+        laser_base_neg = [-kin_parameters(5), -kin_parameters(6), -kin_parameters(7)];
         #display(laser_base)
         T_laser_base_neg = v2t(laser_base_neg);
         T_laser_base = v2t(laser_base);
@@ -177,13 +177,12 @@ function Z = robot_config_f(initial_state, max_enc_values, U, kin_parameters)
 endfunction
 
 
-kinematic_parameters = [0.1; 0.0106141; 1.4; 0];
-laser_baselink = [1.5; 0; 0];
-full_kin_parameters = [kinematic_parameters; laser_baselink];
+kinematic_parameters = [0.1; 0.0106141; 1.4; 0; 1.5; 0; 0];
 max_enc_values = [8192 5000];
 initial_state = [0; 0; 0];
 inc_enc_value =U(:,3);
 abs_enc_value=U(:,2);
+
 ########### Plot the Uncalibrated Odometry of the Front Wheel ###########
 T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
 #plot(T(1,:),T(2,:),-'o');
@@ -217,6 +216,15 @@ T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
 #calibrated_pose_laser = laser(calibrated_firstKin_parameters, T, calibrate_laser_baselink)
 #plot(calibrated_pose_laser(1,:),calibrated_pose_laser(2,:),-'o');
 #pause(10);
+
+#Normalize Angles to do difference
+function angle_difference = angles_difference(theta_first, theta_second)
+    norm_theta_first = mod(theta_1 + pi, 2 * pi) - pi;
+    norm_theta_second = mod(theta_2 + pi, 2 * pi) - pi;
+    difference = norm_theta_first - norm_theta_second;
+    angle_difference = mod(difference + pi, 2 * pi) - pi;
+endfunction
+
 function [f_p, f_m, l_p, l_m] = addPerturbation(initial_state, max_enc_values, U, kinn_parameters)
         for i=1:n_kin_par
             epsilon = zeros(7,1);
@@ -243,12 +251,8 @@ function [e, J] = errorAndJacobian(measures, kine_parameters, pred, initial_stat
         #display(pred_xy )
         meas_t = meas'; 
         e = zeros(3, 1);
-        e(1:2) = pred(1:2) - meas_t(1:2); 
-        normalized_theta_1 = (pred(3) + pi); 
-        normalized_theta_2 = (meas_t(3) + pi); 
-    
-        difference = normalized_theta_1 - normalized_theta_2;
-        e(3) = (difference + pi); 
+        e(1:2, 1) = pred(1:2) - meas_t(1:2); 
+        e(3, 1) = angle_difference(pred(3), meas_t(3));
         #e(3) = ;
         #e = e_v;
         #display('errorrrr')
@@ -283,11 +287,7 @@ function [e, J] = errorAndJacobian(measures, kine_parameters, pred, initial_stat
             #display(size(primo))
             #display(size(secondo))
             J(1:2,i) = difference;
-            norm_theta_1 = (primo(3) + pi); 
-            norm_theta_2 = (secondo(3) + pi); 
-    
-            diff = norm_theta_1 - norm_theta_2;
-            J(3, i) = (diff + pi); 
+            J(3, i) = angle_difference(primo(3), secondo(3)); 
             #display(J(:,i))
             #J(:,i) = laser(kine_parameters + epsilon(1:4), T, laser_baselink + epsilon(5:7)) - laser(kine_parameters - epsilon(1:4), T, laser_baselink + epsilon(5:7));
         endfor
