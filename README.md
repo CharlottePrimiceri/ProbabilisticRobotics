@@ -101,7 +101,7 @@ Find the output:
   We need to find g_{1} and g_{2}, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.\
   ![Figure 6](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model.jpg)
 
-  ![Figure 7](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg)
+  ![Figure 7](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg = 100x100)
 
   The driving velocity is computed through the incremental encoder information by multiplying the number of its ticks, in each time stamp, for the value of meters corresponding to one single tick:\ 
   traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max))\
@@ -109,4 +109,3 @@ Find the output:
   steer_angle = - (ticks_to_radians * (steer_max - steering_ticks)*2*pi/(steer_max)) + steer_offset\
   Otherwhise we'll have positive angles:\
   steer_angle = (ticks_to_radians * steering_ticks *pi *2 / (steer_max)) + steer_offset\
-  
