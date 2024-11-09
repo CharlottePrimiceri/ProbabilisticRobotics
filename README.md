@@ -144,8 +144,19 @@ kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.026
 And the 2D laser pose obtained is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/sim2_ls1iteration.png">
 
-- 5 iterations of the least squares algorithm: consider the dataset divided in 5 batches with 4 the remainder part of the division. 
-
+- 1 iteration of the least squares algorithm on dataset divided in 10 batches. First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder part). In particular i needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch. 
+  With epsilon = 1e-03:
+  delta_x = [3.2036e-03  -9.2217e-05  2.3427e-03  9.5799e-03  -5.8582e-05  5.7750e-05  5.8211e-03]\
+  kinematic_parameters = [5.9270e-01  1.0909e-02  1.6315e+00 -5.9376e-02  1.7516e+00  2.4811e-03 -3.1825e-02]\
+  The predicted laser pose is:
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps03.png">
   
+  With epsilon = 1e-04:
+  delta_x = [5.2819e-03  2.3580e-05  5.9390e-03  1.8237e-03  3.4703e-04  -3.9755e-04  1.5361e-02]\
+  kinematic_parameters = [0.572486  0.010620  1.534612  -0.066687  1.699353  -0.028364  0.026836]\
+  The predicted laser pose is:
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps04.png">
+
+- 1 iteration of LS on 10 batches + more iterations on the whole dataset. 
 
   
