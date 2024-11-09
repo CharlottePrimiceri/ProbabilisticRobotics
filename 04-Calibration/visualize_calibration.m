@@ -303,7 +303,7 @@ n_kin_parameters = length(kinematic_parameters);
 % pause(10);
 
 #LS for each batch
-n_batch = 5; #so that we'll have batches of 486 and 4 in the last one
+n_batch = 10; #so that we'll have batches of 486 and 4 in the last one
 batch_size = floor(dataset_size/n_batch); 
 steer_v = 0;
 for batch = 0:(n_batch)
@@ -312,13 +312,13 @@ for batch = 0:(n_batch)
     #divide in batches
     first_value = ((batch*batch_size)+1);  
     last_value = (batch+1)*batch_size;
-    # write code to consider the last 4 values of the dataset
+    # Consider the last 4 values of the dataset and stop at maximum size of the full dataset
     if last_value < size(U,1)
-        last_value= last_value;
+        last_value = last_value;
     else
         last_value = size(U,1);
     endif
-
+    
     laser_all_kin_plus = [];
     laser_all_kin_minus = [];
 
@@ -326,7 +326,7 @@ for batch = 0:(n_batch)
     if batch == 0
        steer_value = 0;
     else
-       steer_value = U((last_value -1), 2);
+       steer_value = U((last_value - 1), 2);
        #display(steer_value)
     endif   
     laser_pred_batch = laser_pred_all(first_value:last_value, :);
@@ -362,7 +362,7 @@ for batch = 0:(n_batch)
         Jacobian = zeros(3, 7); 
         first_k_laser_values = first_value;
         for k=1:n_kin_parameters
-            last_k_laser_values = (first_k_laser_values + size_U_batch)-1; 
+            last_k_laser_values = (first_k_laser_values + size_U_batch)-1;
             #display(first_k_laser_values)
             #display(last_k_laser_values)
             laser_all_kin_plus_k = laser_all_kin_plus(first_k_laser_values:last_k_laser_values, :);
@@ -384,10 +384,10 @@ for batch = 0:(n_batch)
     endfor
 
     delta_x = -(pinv(H))*b;
-    kinematic_parameters =+ delta_x;
+    kinematic_parameters += delta_x;
     display('Calibrated Kinematic Parameters')
     display(kinematic_parameters)
-endfor
+ endfor
 
 ########### Plot Predicted 2D Laser Pose Trajectory ###########
 T_cal = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
