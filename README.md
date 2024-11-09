@@ -83,7 +83,7 @@ Find the output:
 ### Kinematic Model of Front-Tractor Tricycle
   
 - Drawing the model of the tricycle we can obtain the pose of the front wheel.
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="400" height="350">
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="450" height="350">
 
   The configuration state is q = [$x_{front}$  $y_{front}$ $\theta$ $\psi$].  
   (3) $x_{front} = x_{rear} + cos(\theta) $\
@@ -102,7 +102,7 @@ Find the output:
 
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg" width="350" height="300">
 
-  Given an initial state q = [0; 0; 0; 0], at each time add the previous value of the state to the current one.\
+  Given an initial state q = [1.4; 0; 0; 0], at each time add the previous value of the state to the current one. We can consider that $x_{front}$ start from 1.4 because the initial guess of the axis lenght is 1.4.\
   The driving velocity is computed through the incremental encoder information by multiplying the number of its ticks, in each time stamp, for the value of meters corresponding to one single tick:
   ``` 
   traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max))
@@ -126,7 +126,7 @@ Find the output:
   ```
 ### Least Squares
 
-- 1 iteration of the least squares algorithm: consider the whole dataset with epsilon = 1e-04. The error is computed as the difference between the predicted pose of the laser wrt the baselink and its true pose. To find the kinematic parameters which minimize this error we need to perturb each one of their initial guess by adding and substracting an epsilon value:
+- 1 iteration of the least squares algorithm: consider the whole dataset with epsilon = 1e-04 or epsilon = 1e-03. The error is computed as the difference between the predicted pose of the laser wrt the baselink and its true pose. To find the kinematic parameters which minimize this error we need to perturb each one of their initial guess by adding and substracting an epsilon value:
 ```
 front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + perturbation)
 ```
@@ -138,11 +138,13 @@ While the Jacobian (3x7 matrix) is computed as the difference between the values
 ```
 Jacobian(1:2, k) = laser_plus_i(:, 1:2) - laser_minus_i(:, 1:2)
 ```
-Accordingly, the Jacobian needs to be scaled wrt the perturbation (so divide it by epsilon) and multiplied 1/2 bacause of a factor of 2 in the gradient of the error function. 
+Accordingly, the Jacobian needs to be scaled wrt the perturbation (so divide it by epsilon) and multiplied 1/2 because of a factor of 2 in the gradient of the error function. 
 The kinematic parameters found in that case are:\
 kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.0261e-01  -9.7755e-01  -1.3441e-01]
+And the 2D laser pose obtained is:
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/sim2_ls1iteration.png">
 
-- 
+- 5 iterations of the least squares algorithm: consider the dataset divided in 5 batches with 4 the remainder part of the division. 
 
   
 
