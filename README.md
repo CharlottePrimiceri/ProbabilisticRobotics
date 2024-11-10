@@ -144,7 +144,21 @@ kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.026
 And the 2D laser pose obtained is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/sim2_ls1iteration.png">
 
-- 1 iteration of the least squares algorithm on dataset divided in 10 batches. First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder part). In particular i needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch. 
+- 1 iteration of the least squares algorithm on dataset divided in 10 batches. First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder part). In particular I needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch. Moreover when perturbing the dataset, I consider for each batch the dataset as U(1:last_value, :) where last_value depends on the current batch:\
+```
+last_value = (batch+1)*batch_size; 
+```
+So in the computation of the front wheel pose I perturb equally and consistently from the value at index 1 of the complete dataset to the last_value of the current batch:\
+```
+laser_all_kin_plus = [];
+front_plus = robot_config_f(initial_state, max_enc_values, U(1:last_value, :), kinematic_parameters + perturbation, steer_v);
+laser_plus = laser(kinematic_parameters + perturbation, front_plus);
+laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
+``` 
+laser_all_kin_plus is a matrix (7*size_batch)x3 from which, for each of its 7 subgroups, I'll take the last values equal in number to the current batch_size:\
+``` 
+laser_batch_plus = laser_all_kin_plus(first:last, :); 
+``` 
   With epsilon = 1e-03:
   delta_x = [3.2036e-03  -9.2217e-05  2.3427e-03  9.5799e-03  -5.8582e-05  5.7750e-05  5.8211e-03]\
   kinematic_parameters = [5.9270e-01  1.0909e-02  1.6315e+00 -5.9376e-02  1.7516e+00  2.4811e-03 -3.1825e-02]\
@@ -158,5 +172,5 @@ And the 2D laser pose obtained is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps04.png">
 
 - 1 iteration of LS on 10 batches + more iterations on the whole dataset. 
-
+  To 
   
