@@ -176,7 +176,7 @@ laser_batch_plus = laser_all_kin_plus(first:last, :);
   I also decided to check the theta value to confirm the correcteness of parameters:  
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/batches_theta_laser.png"> 
 
-- <ins>1 iteration of LS on 10 batches + some iterations on the whole dataset<ins>
+- <ins>1 iteration of LS on 10 batches + some iterations on the whole dataset</ins>
   The final calibrated kinematic parameters are:
   kinematic_parameters = [5.5336e-01  1.0755e-02  1.5108e+00  -6.4970e-02  1.7395e+00  -2.3723e-04  -4.1820e-03]\
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_xy_laser.png">
