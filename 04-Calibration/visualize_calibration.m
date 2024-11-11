@@ -3,8 +3,6 @@ clear
 clc
 #import 2d geometry utils
 source "../tools/utilities/geometry_helpers_2d.m"
-#source "../04-Calibration/odometry_trajectory.m"
-#source "../04-Calibration/tricycle.m"
 disp('loading the matrix');
 path = 'dataset.txt';
 
@@ -184,17 +182,18 @@ num_kin = length(kinematic_parameters);
 dataset_size = size(U, 1);
 steer_v = 0;
 ####################### GROUND TRUTH ##############################
-## xy laser pose trajectory
 % plot(U(:,7), U(:,8),-'o'); 
 % axis([-5 4 -4 2]);
+% title ("Ground Truth xy trajectory of Laser wrt baselink");
 % pause(5);
-## theta laser pose trasjectory
-% plot(indices, U(:,3),-'o');
-% pause(5)
+plot(indices, U(:,9),-'o');
+axis([-2 2434 -5 5]);
+title ("Ground Truth theta values of Laser wrt baselink");
+pause(5)
  
 ## Ground Truth Uncalibrated Odometry of the Front Wheel
-# xy
 % plot(U(:,4), U(:,5), -'o');
+% title ("Ground Truth Uncalibrated Odometry of the Front Wheel");
 % pause(5);
 
 ####################### UNCALIBRATED POSE ###########################
@@ -203,12 +202,14 @@ steer_v = 0;
 % T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
 % plot(T(1,:),T(2,:),-'o');
 % axis([-5 25 -13 2]);
+% title ("Initial Predicted Uncalibrated xy trajectory of Front Wheel");
 % pause(5);
 
 ## Predicted Uncalibrated Odometry of Laser Pose w.r.t the baselink with initial guess of parameters 
 % pose_laser = laser(kinematic_parameters, T);
 % plot(pose_laser(:,1),pose_laser(:,2),-'o');
 % axis([-5 25 -13 2]);
+% title ("Initial Predicted Uncalibrated xy trajectory of Laser wrt baselink");
 % pause(5);
 
 #Normalize Angles to do difference
@@ -234,8 +235,8 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
             if batch == 9
                last_value = size(U,1);
             endif
-            display(first_value)
-            display(last_value)
+            % display(first_value)
+            % display(last_value)
             laser_all_kin_plus = [];
             laser_all_kin_minus = [];
 
@@ -322,46 +323,49 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
 
 endfunction
 
-#1 iteration of the least squares algorithm on dataset divided in 10 batches
+#######  1 iteration of LS algorithm on dataset divided in 10 batches
 epsilon = 1e-03;
 n_batch = 10;
 batch_size = floor(dataset_size / n_batch); #243 for 10 batches
 
-kinematic_parameters = LeastSquares(kinematic_parameters, max_encoders_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U);
+kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U);
 
-% #Calibrated 2D Laser Pose Trajectory after 1 LS on batches
-% calibrated_front_pose = robot_config_f(initial_state, max_encoders_values, U, kinematic_parameters, steer_v);
-% calibrated_pose_laser = laser(kinematic_parameters, calibrated_front_pose);
-% #xy
-% plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
-% axis([-5 4 -4 2]);
-% pause(10);
-% #theta
-% plot(indices, calibrated_pose_laser(:,3),-'o');
-% axis([-2 2434 -5 5]);
-% pause(10);
+#Calibrated 2D Laser Pose Trajectory after 1 LS on batches
+calibrated_front_pose = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
+calibrated_pose_laser = laser(kinematic_parameters, calibrated_front_pose);
+#xy
+plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
+axis([-5 4 -4 2]);
+title ("batches - xy trajectory of Laser wrt baselink");
+pause(5);
+#theta
+plot(indices, calibrated_pose_laser(:,3),-'o');
+axis([-2 2434 -5 5]);
+title ("batches - theta values of Laser wrt baselink");
+pause(5);
 
-#more iteration of the least squares algorithm 
-#with the calibrated kinematic parameters found
-#with the least squares on batches
+####### more iteration of LS algorithm withcalibrated kinematic parameters found with the least squares on batches
+
 epsilon = 1e-04;
 n_batch = 1;
 batch_size = floor(dataset_size / n_batch); #243 for 10 batches
 
 for i=1:5
-    kinematic_parameters = LeastSquares(kinematic_parameters, max_encoders_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U);
+    kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U);
 endfor
 
 ####################### CALIBRATED POSE ###########################
-calibrated_front_pose_f = robot_config_f(initial_state, max_encoders_values, U, kinematic_parameters, steer_v);
+calibrated_front_pose_f = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
 calibrated_pose_laser_f = laser(kinematic_parameters, calibrated_front_pose_f);
-#xy
+
 plot(calibrated_pose_laser_f(:,1),calibrated_pose_laser_f(:,2),-'o');
 axis([-5 4 -4 2]);
+title ("Converging xy trajectory of Laser Pose wrt baselink");
 pause(10);
-#theta
+
 plot(indices, calibrated_pose_laser_f(:,3),-'o');
 axis([-2 2434 -5 5]);
+title ("Converging theta values of Laser Pose wrt baselink");
 pause(10);
 
 
