@@ -11,7 +11,7 @@
 
 - Initial values of [ Ksteer, Ktraction, axis_lenght, steer_offset] = [ 0.1, 0.0106141, 1.4, 0]
   - Ksteer: radians for one tick of the absolute encoder
-  - Ktraction: meters for one tick of the absolute encoder
+  - Ktraction: meters for one tick of the incremental encoder
   - Steer Offset: correction on the direction of the front wheel in order to go forward (zero angle)
     
 - Position of the Laser w.r.t. the base link:
@@ -34,7 +34,7 @@ For a certain time step we have:
 Find the output:
 - 2D position of the sensor w.r.t the base link
 - The kinematic parameters [ ksteer, ktraction, steer_offset, base_line ]
-- From the ground truth of the uncalibrated odometry of the front wheel: 
+- From the ground truth of the uncalibrated odometry of the front wheel plotted in octave: 
 
   ![Figure_1](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/GT_xy_front.png)
 
@@ -88,7 +88,7 @@ Find the output:
 - Drawing the <ins>tricycle model</ins> we can obtain the pose of the front wheel.
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="450" height="350">
 
-  The configuration state is q = [$x_{front}$  $y_{front}$ $\theta$ $\psi$].  
+  The configuration state is q = [$x_{front} y_{front}$ $\theta$ $\psi$].  
   (3) $x_{front} = x_{rear} + cos(\theta) $\
   (4) $y_{rear} = y_{rear} + sin(\theta) $\
   Consider the pure rolling constraint for the front wheel and for the rear wheels consider the midpoint of the axe that connects them:\
