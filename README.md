@@ -36,7 +36,7 @@ Find the output:
 - The kinematic parameters [ ksteer, ktraction, steer_offset, base_line ]
 - From the ground truth of the uncalibrated odometry of the front wheel: 
 
-  ![Figure_1](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/uncalibrated_odometry_ground_truth.png)
+  ![Figure_1](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/GT_xy_front.png)
 
   find the correct trajectory for the laser attached to the front wheel. The ground truth is given in python:
   
@@ -178,9 +178,9 @@ laser_batch_plus = laser_all_kin_plus(first:last, :);
 
 - <ins>1 iteration of LS on 10 batches + some iterations on the whole dataset</ins>\
   Considering the kinematic parameters obtained after the LS on batches with epsilon = 1e-03, we have to try them on the whole dataset.
-  The error c starts converging after 3 iterations, so i stopped at 5 and obtained the final calibrated kinematic parameters:
+  The error c starts converging after 3 iterations, so i stopped at 5 and obtained the final calibrated kinematic parameters:\
   kinematic_parameters = [5.5336e-01  1.0755e-02  1.5108e+00  -6.4970e-02  1.7395e+00  -2.3723e-04  -4.1820e-03]\
-  And the following 2D Laser Pose w.r.t. the baselink
+  And the following 2D Laser Pose w.r.t. the baselink:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_xy_laser.png">
 
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_theta_laser.png">
