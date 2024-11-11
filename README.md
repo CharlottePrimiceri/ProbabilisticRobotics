@@ -88,7 +88,7 @@ Find the output:
 - Drawing the <ins>tricycle model</ins> we can obtain the pose of the front wheel.
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="450" height="350">
 
-  The configuration state is q = [$x_{front} y_{front}$ $\theta$ $\psi$].  
+  The configuration state is q = [$x_{front}$$y_{front}$ $\theta$ $\psi$].  
   (3) $x_{front} = x_{rear} + cos(\theta) $\
   (4) $y_{rear} = y_{rear} + sin(\theta) $\
   Consider the pure rolling constraint for the front wheel and for the rear wheels consider the midpoint of the axe that connects them:\
