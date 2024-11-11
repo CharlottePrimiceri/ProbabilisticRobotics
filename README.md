@@ -71,11 +71,11 @@ Find the output:
   overflow-previous+current is lesser than the difference preovious-current, so we have overflow. 
 
 - True laser pose trajectory in octave:
-   ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/true_traj_octave.png) 
+   ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/GT_xy_laser.png) 
   
-  with theta value:
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/truththetalaserpose.png">
-  
+  with theta values:
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/GT_theta_laser.png">
+
 ### Laser pose w.r.t base link
 
 - The laser transformation w.r.t. the reference frame of the robot is given by the transformation:\
@@ -121,7 +121,7 @@ Find the output:
   ```
   Given this the Predicted Uncalibrated Odometry of the front wheel is:
 
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/front_wheel_uncalibrated_pose.png">
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/init_xy_front.png">
 
   Because there are negative angles we need to normalize the angles values when computing subtractions. First normalize the single angles within $-\pi$ and $\pi$ and then also the difference between each other:
   ```
@@ -145,9 +145,9 @@ Accordingly, the Jacobian needs to be scaled wrt the perturbation (so divide it 
 The kinematic parameters found in that case are:\
 kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.0261e-01  -9.7755e-01  -1.3441e-01]
 And the 2D laser pose obtained is:
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/sim2_ls1iteration.png">
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/sim_ls1iteration.png">
 
-- 1 iteration of the least squares algorithm on dataset divided in 10 batches. First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder parts so the last batch is of 247 values).\
+- 1 iteration of the least squares algorithm on dataset divided in 10 batches + some Iterations on the whole dataset. First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder parts so the last batch is of 247 values).\
 In particular I needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch.\
 Then I perturbed, for each batch, the dataset from the first index to the last value of the current batch, so U(1:last_value, :).\
 For each batch, in the computation of the front wheel pose, is perturbed one kinematic parameter, each time a different one, by adding and subtracting the perturbation vector.\ 
@@ -158,7 +158,7 @@ front_plus = robot_config_f(initial_state, max_enc_values, U(1:last_value, :), k
 laser_plus = laser(kinematic_parameters + perturbation, front_plus);
 laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
 ``` 
-laser_all_kin_plus is a matrix (7*size_batch)x3 from which, for each of its 7 subgroups, I'll take the last values equal in number to the current batch_size:\
+  laser_all_kin_plus is a matrix (7*size_batch)x3 from which, for each of its 7 subgroups, I'll take the last values equal in number to the current batch_size:\
 ``` 
 laser_batch_plus = laser_all_kin_plus(first:last, :); 
 ``` 
@@ -166,18 +166,19 @@ laser_batch_plus = laser_all_kin_plus(first:last, :);
   kinematic_parameters = [0.572486  0.010620  1.534612  -0.066687  1.699353  -0.028364  0.026836]\
   The predicted laser pose is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps04.png">
-  
 
   With epsilon = 1e-03:
   kinematic_parameters = [0.560343  0.010646  1.517498  -0.062649  1.722270  -0.051588  -0.013742]\
-  The predicted laser pose is:
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps03.png">
-  
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/thetacalibratedbatches03.png">
+  The predicted xy laser pose is:
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/batches_xy_laser.png">  
+
+  I also decided to check the theta value to confirm the correcteness of parameters:  
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/batches_theta_laser.png"> 
 
 - 1 iteration of LS on 10 batches + some iterations on the whole dataset.
   To 
   kinematic_parameters = []\
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/xycalibratedlaserpose.png">
+  The 
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_xy_laser.png">
 
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/thetacalibratedlaserpose.png">
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_theta_laser.png">
