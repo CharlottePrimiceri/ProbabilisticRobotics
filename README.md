@@ -126,7 +126,7 @@ Find the output:
   ```
 ### Least Squares
 
-- 1 iteration of the least squares algorithm: consider the whole dataset with epsilon = 1e-04 or epsilon = 1e-03. The error is computed as the difference between the predicted pose of the laser wrt the baselink and its true pose. To find the kinematic parameters which minimize this error we need to perturb each one of their initial guess by adding and substracting an epsilon value:
+- 1 iteration of the least squares algorithm: consider the whole dataset with epsilon = 1e-04 or epsilon = 1e-03. The error is computed as the difference between the predicted pose of the laser wrt the baselink and its true pose. To find the kinematic parameters which minimize this error we need to perturb each time a different initial guess of kinematic parameters, by adding and substracting an epsilon value:
 ```
 front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + perturbation)
 ```
@@ -144,10 +144,10 @@ kinematic_parameters = [1.4453e-01  -8.8328e-04  -3.2173e-01  -1.5100e-02  9.026
 And the 2D laser pose obtained is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/sim2_ls1iteration.png">
 
-- 1 iteration of the least squares algorithm on dataset divided in 10 batches. First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder part). In particular I needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch. Moreover when perturbing the dataset, I consider for each batch the dataset as U(1:last_value, :) where last_value depends on the current batch:\
-```
-last_value = (batch+1)*batch_size; 
-```
+- 1 iteration of the least squares algorithm on dataset divided in 10 batches. First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder parts so the last batch is of 247 values).\
+In particular I needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch.\
+Then I perturbed, for each batch, the dataset from the first index to the last value of the current batch, so U(1:last_value, :).\
+For each batch, in the computation of the front wheel pose, is perturbed one kinematic parameter, each time a different one, by adding and subtracting the perturbation vector.\ 
 So in the computation of the front wheel pose I perturb equally and consistently from the value at index 1 of the complete dataset to the last_value of the current batch:\
 ```
 laser_all_kin_plus = [];
@@ -159,18 +159,22 @@ laser_all_kin_plus is a matrix (7*size_batch)x3 from which, for each of its 7 su
 ``` 
 laser_batch_plus = laser_all_kin_plus(first:last, :); 
 ``` 
-  With epsilon = 1e-03:
-  delta_x = [3.2036e-03  -9.2217e-05  2.3427e-03  9.5799e-03  -5.8582e-05  5.7750e-05  5.8211e-03]\
-  kinematic_parameters = [5.9270e-01  1.0909e-02  1.6315e+00 -5.9376e-02  1.7516e+00  2.4811e-03 -3.1825e-02]\
-  The predicted laser pose is:
-  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps03.png">
-  
   With epsilon = 1e-04:
-  delta_x = [5.2819e-03  2.3580e-05  5.9390e-03  1.8237e-03  3.4703e-04  -3.9755e-04  1.5361e-02]\
   kinematic_parameters = [0.572486  0.010620  1.534612  -0.066687  1.699353  -0.028364  0.026836]\
   The predicted laser pose is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps04.png">
-
-- 1 iteration of LS on 10 batches + more iterations on the whole dataset. 
-  To 
   
+
+  With epsilon = 1e-03:
+  kinematic_parameters = [0.560343  0.010646  1.517498  -0.062649  1.722270  -0.051588  -0.013742]\
+  The predicted laser pose is:
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps03.png">
+  
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/thetacalibratedbatches03.png">
+
+- 1 iteration of LS on 10 batches + some iterations on the whole dataset.
+  To 
+  kinematic_parameters = []\
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/xycalibratedlaserpose.png">
+
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/thetacalibratedlaserpose.png">
