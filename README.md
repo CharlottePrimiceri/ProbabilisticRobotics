@@ -50,6 +50,7 @@ Find the output:
   Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain:\
   eps(1.6e+09) = 2.38e-07. 
   So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) then it would be lost. 
+  I took care of the reset of time values in the function reset_time().
 
 - <ins>How to deal with Overflow?</ins>
 
@@ -69,7 +70,7 @@ Find the output:
   67th sample: enc_value=4294962835\
   68th sample: enc_value=526\
   overflow-previous+current is lesser than the difference preovious-current, so we have overflow. 
-
+  This computation is done in the read_odometry(path) function. 
 - <ins>True laser pose trajectory in octave</ins>:
    ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/GT_xy_laser.png) 
   
@@ -89,7 +90,7 @@ Find the output:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="450" height="350">
 
   The configuration state is:\
-  $q = [x_{front}, y_{front}, \theta, \psi]$
+  $q = [x_{front}, y_{front}, \theta, \psi]$\
   (3) $x_{front} = x_{rear} + cos(\theta) $\
   (4) $y_{rear} = y_{rear} + sin(\theta) $\
   Consider the pure rolling constraint for the front wheel and for the rear wheels consider the midpoint of the axe that connects them:\
@@ -98,7 +99,7 @@ Find the output:
   Substitute the first two equations in the last one:\
   (7) $\dot x_{front} sin(\theta) - \dot y_{front} cos(\theta ) + \dot{\theta} l = 0$\
   The relationship between the state and the input is defined by the kinematic model:\
-  (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\ 
+  (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
   We need to find $g_{1}$ and $g_{2}$, vector basis of $\dot q$, so that (9) $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.
   
@@ -128,6 +129,10 @@ Find the output:
   ```
   norm_theta_1 = mod(theta_1 + pi, 2 * pi) - pi;
   ```
+  While the Predicted Uncalibrated Odometry of the Laser w.r.t the baselink is:
+    <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/init_xy_laser.png">
+  
+  Formulas can be find in: predictFront_Tractor_Tricycle(), robot_config_f(), laser().
 ### Least Squares
 
 - <ins>1 iteration of the least squares algorithm on whole dataset</ins>: consider the whole dataset with epsilon = 1e-04 or epsilon = 1e-03. The error is computed as the difference between the predicted pose of the laser wrt the baselink and its true pose. To find the kinematic parameters which minimize this error we need to perturb each time a different initial guess of kinematic parameters, by adding and substracting an epsilon value:
@@ -149,9 +154,10 @@ And the 2D laser pose obtained is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/sim_ls1iteration.png">
 
 - <ins>1 iteration of the least squares algorithm on dataset divided in 10 batches + some Iterations on the whole dataset</ins>\
-First I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder parts so the last batch is of 247 values).\
+First I've merged the initial guess of the laser pose w.r.t baselink to the kinematic paramters to perturb. 
+Then I've tried to divide the dataset in 5 batches, but without significant results, then with 10 batches (2434\10 with 4 as reminder parts so the last batch is of 247 values).\
 In particular I needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch.\
-Then I perturbed, for each batch, the dataset from the first index to the last value of the current batch, so U(1:last_value, :).\
+After that I perturbed, for each batch, the dataset from the first index to the last value of the current batch, so U(1:last_value, :).\
 For each batch, in the computation of the front wheel pose, is perturbed one kinematic parameter, each time a different one, by adding and subtracting the perturbation vector.\ 
 So in the computation of the front wheel pose I perturb equally and consistently from the value at index 1 of the complete dataset to the last_value of the current batch:\
 ```
@@ -185,3 +191,7 @@ laser_batch_plus = laser_all_kin_plus(first:last, :);
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_xy_laser.png">
 
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_theta_laser.png">
+
+  The application of the algorithm can be found in the LeastSquares() function.\
+  All the main functions can be found in visualize_calibration.m and the v2t, t2v functions in the utilities in tools. 
+
