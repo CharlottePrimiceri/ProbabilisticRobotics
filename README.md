@@ -129,7 +129,8 @@ Find the output:
   ```
   norm_theta_1 = mod(theta_1 + pi, 2 * pi) - pi;
   ```
-  While the Predicted Uncalibrated Odometry of the Laser w.r.t the baselink is:
+  While the Predicted Uncalibrated Odometry of the Laser w.r.t the baselink is:\
+
     <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/init_xy_laser.png">
   
   Formulas can be find in: predictFront_Tractor_Tricycle(), robot_config_f(), laser().
@@ -159,14 +160,14 @@ Then I've tried to divide the dataset in 5 batches, but without significant resu
 In particular I needed to modify the function robot_config_f() by adding as argument the value of the steering angle corresponding to its previous value with respect the first one for each batch.\
 After that I perturbed, for each batch, the dataset from the first index to the last value of the current batch, so U(1:last_value, :).\
 For each batch, in the computation of the front wheel pose, is perturbed one kinematic parameter, each time a different one, by adding and subtracting the perturbation vector.\ 
-So in the computation of the front wheel pose I perturb equally and consistently from the value at index 1 of the complete dataset to the last_value of the current batch:\
+So in the computation of the front wheel pose I perturb equally and consistently from the value at index 1 of the complete dataset to the last_value of the current batch:
 ```
 laser_all_kin_plus = [];
 front_plus = robot_config_f(initial_state, max_enc_values, U(1:last_value, :), kinematic_parameters + perturbation, steer_v);
 laser_plus = laser(kinematic_parameters + perturbation, front_plus);
 laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
 ``` 
-  laser_all_kin_plus is a matrix (7*size_batch)x3 from which, for each of its 7 subgroups, I'll take the last values equal in number to the current batch_size:\
+  laser_all_kin_plus is a matrix (7*size_batch)x3 from which, for each of its 7 subgroups, I'll take the last values equal in number to the current batch_size:
 ``` 
 laser_batch_plus = laser_all_kin_plus(first:last, :); 
 ``` 
