@@ -180,7 +180,9 @@ max_enc_values = [8192 5000];
 # psi is omitted 
 initial_state = [1.4; 0; 0];
 indices = (1:2434)';
-
+num_kin = length(kinematic_parameters);
+dataset_size = size(U, 1);
+steer_v = 0;
 ####################### GROUND TRUTH ##############################
 ## xy laser pose trajectory
 % plot(U(:,7), U(:,8),-'o'); 
@@ -198,7 +200,7 @@ indices = (1:2434)';
 ####################### UNCALIBRATED POSE ###########################
 
 ## Predicted Uncalibrated Odometry of Front Wheel with initial guess of parameters 
-% T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters);
+% T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
 % plot(T(1,:),T(2,:),-'o');
 % axis([-5 25 -13 2]);
 % pause(5);
@@ -221,15 +223,7 @@ endfunction
 
 ############ LEAST SQUARES FOR BATCHES ############
 function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U)
-        % if n_batch > 1
-        %    max_batch = n_batch;
-        % else
-        %    max_batch = n_batch-1;
-        % endif
-        count = 0;
         for batch = 0:(n_batch-1)
-            count += 1;
-            display(count)
             T_pred_all = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
             laser_pred_all = laser(kinematic_parameters, T_pred_all);
 
@@ -328,13 +322,6 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
 
 endfunction
 
-kinematic_parameters = [0.1; 0.0106141; 1.4; 0; 1.5; 0; 0];
-max_encoders_values = [8192 5000];
-initial_state = [1.4; 0; 0];
-num_kin = length(kinematic_parameters);
-dataset_size = size(U, 1);
-steer_v = 0;
-
 #1 iteration of the least squares algorithm on dataset divided in 10 batches
 epsilon = 1e-03;
 n_batch = 10;
@@ -342,18 +329,17 @@ batch_size = floor(dataset_size / n_batch); #243 for 10 batches
 
 kinematic_parameters = LeastSquares(kinematic_parameters, max_encoders_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U);
 
-calibrated_front_pose = robot_config_f(initial_state, max_encoders_values, U, kinematic_parameters, steer_v);
-calibrated_pose_laser = laser(kinematic_parameters, calibrated_front_pose);
-
-########### Plot Calibrated 2D Laser Pose Trajectory ###########
-plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
-axis([-5 4 -4 2]);
-pause(10);
-
-indices = (1:2434)';
-plot(indices, calibrated_pose_laser(:,3),-'o');
-axis([-2 2434 -5 5]);
-pause(10);
+% #Calibrated 2D Laser Pose Trajectory after 1 LS on batches
+% calibrated_front_pose = robot_config_f(initial_state, max_encoders_values, U, kinematic_parameters, steer_v);
+% calibrated_pose_laser = laser(kinematic_parameters, calibrated_front_pose);
+% #xy
+% plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
+% axis([-5 4 -4 2]);
+% pause(10);
+% #theta
+% plot(indices, calibrated_pose_laser(:,3),-'o');
+% axis([-2 2434 -5 5]);
+% pause(10);
 
 #more iteration of the least squares algorithm 
 #with the calibrated kinematic parameters found
@@ -366,14 +352,14 @@ for i=1:5
     kinematic_parameters = LeastSquares(kinematic_parameters, max_encoders_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U);
 endfor
 
+####################### CALIBRATED POSE ###########################
 calibrated_front_pose_f = robot_config_f(initial_state, max_encoders_values, U, kinematic_parameters, steer_v);
 calibrated_pose_laser_f = laser(kinematic_parameters, calibrated_front_pose_f);
-
-########### Plot Calibrated 2D Laser Pose Trajectory ###########
+#xy
 plot(calibrated_pose_laser_f(:,1),calibrated_pose_laser_f(:,2),-'o');
 axis([-5 4 -4 2]);
 pause(10);
-
+#theta
 plot(indices, calibrated_pose_laser_f(:,3),-'o');
 axis([-2 2434 -5 5]);
 pause(10);
