@@ -129,7 +129,7 @@ Find the output:
   ```
   norm_theta_1 = mod(theta_1 + pi, 2 * pi) - pi;
   ```
-  While the Predicted Uncalibrated Odometry of the Laser w.r.t the baselink is:\
+  While the Predicted Uncalibrated Odometry of the Laser w.r.t the baselink is:
 
     <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/init_xy_laser.png">
   
@@ -171,12 +171,12 @@ laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
 ``` 
 laser_batch_plus = laser_all_kin_plus(first:last, :); 
 ``` 
-  With epsilon = 1e-04:
+  With epsilon = 1e-04:\
   kinematic_parameters = [0.572486  0.010620  1.534612  -0.066687  1.699353  -0.028364  0.026836]\
   The predicted laser pose is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/prediction_10_batch_eps04.png">
 
-  With epsilon = 1e-03:
+  With epsilon = 1e-03:\
   kinematic_parameters = [0.560343  0.010646  1.517498  -0.062649  1.722270  -0.051588  -0.013742]\
   The predicted xy laser pose is:
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/batches_xy_laser.png">  
