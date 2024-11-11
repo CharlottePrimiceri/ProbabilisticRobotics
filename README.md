@@ -72,7 +72,10 @@ Find the output:
 
 - True laser pose trajectory in octave:
    ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/true_traj_octave.png) 
-
+  
+  with theta value:
+  <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/truththetalaserpose.png">
+  
 ### Laser pose w.r.t base link
 
 - The laser transformation w.r.t. the reference frame of the robot is given by the transformation:\
