@@ -45,13 +45,13 @@ Find the output:
 ## Solution
 
 ### Dataset:
-- Time Values:
+- <ins>Time Values</ins>:
 
   Because of the floating point, is better to reinitialize the time, from 0, to have more precise increment value of time. In fact, in matlab, if we compute the eps(number_a), the error that can be computed between number_a and the minum computable consecutive one number_b, we obtain:\
   eps(1.6e+09) = 2.38e-07. 
   So if it occurs  an increment of the last two digits in 1668091584.821040869 (example of our dataset) then it would be lost. 
 
-- How to deal with Overflow?
+- <ins>How to deal with Overflow?</ins>
 
   As it is suggested, the reading of the incremental encoder, is stored in an uint32 variable which has a maximum range of 4294967295. 
   So, if the previous value of tick is greater than the next one and it cannot be considered as a backword motion, there is overflow. To avoid that, in this case change the increment of ticks as:
@@ -70,7 +70,7 @@ Find the output:
   68th sample: enc_value=526\
   overflow-previous+current is lesser than the difference preovious-current, so we have overflow. 
 
-- True laser pose trajectory in octave:
+- <ins>True laser pose trajectory in octave</ins>:
    ![Figure_3](https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/GT_xy_laser.png) 
   
   with theta values:
@@ -85,7 +85,7 @@ Find the output:
 
 ### Kinematic Model of Front-Tractor Tricycle
   
-- Drawing the model of the tricycle we can obtain the pose of the front wheel.
+- Drawing the <ins>tricycle model</ins> we can obtain the pose of the front wheel.
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/tricycle.jpg" width="450" height="350">
 
   The configuration state is q = [$x_{front}$  $y_{front}$ $\theta$ $\psi$].  
@@ -99,13 +99,13 @@ Find the output:
   The relationship between the state and the input is defined by the kinematic model:\
   (8) $\dot q = g_{1} u_{1} + g_{2} u_{2}$\ 
   The two input are respectively the driving velocity, v, and the steering velocity, w, of the front wheel.\
-  We need to find $g_{1}$ and $g_{2}$, vector basis of $\dot q$, so that $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.
-
+  We need to find $g_{1}$ and $g_{2}$, vector basis of $\dot q$, so that (9) $A^{T}(q) \dot q = 0$, from eq. (7), is satisfied.
+  
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model.jpg" width="500" height="500">
-
+  
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/kin_model_2.jpg" width="350" height="300">
-
-  Given an initial state q = [1.4; 0; 0; 0], at each time add the previous value of the state to the current one. We can consider that $x_{front}$ start from 1.4 because the initial guess of the axis lenght is 1.4.\
+  
+  Given an initial state q = [1.4; 0; 0; 0], at each time add the previous value of the state to the current one. We can consider that $x_{front}$ starts from 1.4 because the initial guess of the axis lenght is 1.4.\
   The driving velocity is computed through the incremental encoder information by multiplying the number of its ticks, in each time stamp, for the value of meters corresponding to one single tick:
   ``` 
   traction_front = traction_incremental_ticks * (ticks_to_meters / (traction_max))
@@ -177,8 +177,10 @@ laser_batch_plus = laser_all_kin_plus(first:last, :);
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/batches_theta_laser.png"> 
 
 - <ins>1 iteration of LS on 10 batches + some iterations on the whole dataset</ins>\
-  The final calibrated kinematic parameters are:
+  Considering the kinematic parameters obtained after the LS on batches with epsilon = 1e-03, we have to try them on the whole dataset.
+  The error c starts converging after 3 iterations, so i stopped at 5 and obtained the final calibrated kinematic parameters:
   kinematic_parameters = [5.5336e-01  1.0755e-02  1.5108e+00  -6.4970e-02  1.7395e+00  -2.3723e-04  -4.1820e-03]\
+  And the following 2D Laser Pose w.r.t. the baselink
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_xy_laser.png">
 
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_theta_laser.png">
