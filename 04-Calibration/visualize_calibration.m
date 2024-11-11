@@ -182,35 +182,36 @@ num_kin = length(kinematic_parameters);
 dataset_size = size(U, 1);
 steer_v = 0;
 ####################### GROUND TRUTH ##############################
-% plot(U(:,7), U(:,8),-'o'); 
-% axis([-5 4 -4 2]);
-% title ("Ground Truth xy trajectory of Laser wrt baselink");
-% pause(5);
-plot(indices, U(:,9),-'o');
-axis([-2 2434 -5 5]);
-title ("Ground Truth theta values of Laser wrt baselink");
-pause(5)
+plot(U(:,7), U(:,8),-'o'); 
+axis([-5 4 -4 2]);
+title ("Ground Truth xy trajectory of Laser wrt baselink");
+pause(5);
+% plot(indices, U(:,9),-'o');
+% axis([-2 2434 -5 5]);
+% title ("Ground Truth theta values of Laser wrt baselink");
+% pause(5)
  
 ## Ground Truth Uncalibrated Odometry of the Front Wheel
-% plot(U(:,4), U(:,5), -'o');
-% title ("Ground Truth Uncalibrated Odometry of the Front Wheel");
-% pause(5);
+plot(U(:,4), U(:,5), -'o');
+axis([-5 25 -14 2]);
+title ("Ground Truth Uncalibrated Odometry of the Front Wheel");
+pause(5);
 
 ####################### UNCALIBRATED POSE ###########################
 
 ## Predicted Uncalibrated Odometry of Front Wheel with initial guess of parameters 
-% T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
-% plot(T(1,:),T(2,:),-'o');
-% axis([-5 25 -13 2]);
-% title ("Initial Predicted Uncalibrated xy trajectory of Front Wheel");
-% pause(5);
+T = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
+plot(T(1,:),T(2,:),-'o');
+axis([-5 25 -13 2]);
+title ("Initial Predicted Uncalibrated xy trajectory of Front Wheel");
+pause(5);
 
 ## Predicted Uncalibrated Odometry of Laser Pose w.r.t the baselink with initial guess of parameters 
-% pose_laser = laser(kinematic_parameters, T);
-% plot(pose_laser(:,1),pose_laser(:,2),-'o');
-% axis([-5 25 -13 2]);
-% title ("Initial Predicted Uncalibrated xy trajectory of Laser wrt baselink");
-% pause(5);
+pose_laser = laser(kinematic_parameters, T);
+plot(pose_laser(:,1),pose_laser(:,2),-'o');
+axis([-5 25 -13 2]);
+title ("Initial Predicted Uncalibrated xy trajectory of Laser wrt baselink");
+pause(5);
 
 #Normalize Angles to do difference
 function angle_difference = angle_normalization(theta_1, theta_2)
@@ -314,8 +315,8 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
 
             delta_x = -(pinv(H))*b;
             kinematic_parameters += delta_x;
-            display('delta_x')
-            display(delta_x)
+            display('Error')
+            display(c)
 
             display('Calibrated Kinematic Parameters')
             display(kinematic_parameters)
