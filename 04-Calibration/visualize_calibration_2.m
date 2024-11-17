@@ -226,7 +226,7 @@ endfunction
 ############ LEAST SQUARES FOR BATCHES ############
 function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U)
         #in this way the error converge to a very high value
-        initial_lr = 0.8;   #0.7 non male
+        initial_lr = 0.9;   #0.7 non male
         alpha = initial_lr;
         decay_rate=0.9;    #0.8 non male
         #increase_factor = 0.7;
@@ -234,7 +234,7 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
         #max_alpha = 10.0;
         #prev_chi = inf;
         kernel_threshold = 1; 
-        final_threshold = 1e-3; 
+        final_threshold = 1e-1; 
         threshold_decay = (kernel_threshold  - final_threshold) / 70;
         for iteration = 1:70
             current_threshold = kernel_threshold - iteration * threshold_decay;
@@ -333,21 +333,11 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
 
                     endfor
 
-                    % if (c > kernel_threshold)
-                    %     error *= sqrt(kernel_threshold / c);
-                    %     c = kernel_threshold;
-                    % endif
-
-                    delta_x = -(pinv(H))*b; # * alpha;
+                    delta_x = -(pinv(H))*b; 
                     kinematic_parameters += delta_x * alpha;
 
-                    % if c < prev_chi
-                    %     alpha = min(alpha * increase_factor, max_alpha);
-                    % else
-                    %     alpha = max(alpha * decay_rate, min_alpha);
-                    % endif
                     alpha = max(alpha * decay_rate, min_alpha);
-                    #prev_chi = c;
+    
                     display('Error')
                     display(c)
                     display(iteration)
@@ -367,7 +357,7 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
 endfunction
 
 #######  1 iteration of LS algorithm on dataset divided in 10 batches
-epsilon = 1e-03;
+epsilon = 1e-04;
 #n_batch = 10;
 #batch_size = floor(dataset_size / n_batch); #243 for 10 batches
 batch_size = 2434; 
