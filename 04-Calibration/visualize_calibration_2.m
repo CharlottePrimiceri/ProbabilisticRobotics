@@ -226,14 +226,19 @@ endfunction
 ############ LEAST SQUARES FOR BATCHES ############
 function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U)
         #in this way the error converge to a very high value
-        initial_lr = 1.0;
+        initial_lr = 0.8;   #0.7 non male
         alpha = initial_lr;
-        decay_rate=0.9;
-        increase_factor = 1.05;
-        min_alpha = 1e-5;
-        max_alpha = 10.0;
-        prev_chi = inf;
-        for iteration = 1:50
+        decay_rate=0.9;    #0.8 non male
+        #increase_factor = 0.7;
+        min_alpha = 1e-4;  
+        #max_alpha = 10.0;
+        #prev_chi = inf;
+        kernel_threshold = 1; 
+        final_threshold = 1e-3; 
+        threshold_decay = (kernel_threshold  - final_threshold) / 70;
+        for iteration = 1:70
+            current_threshold = kernel_threshold - iteration * threshold_decay;
+            current_threshold = max(current_threshold, final_threshold);
             for batch = 0:(n_batch-1)
                 if batch == 0 || batch == 1
                     T_pred_all = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
@@ -318,24 +323,34 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
                         # scale the gradient
                         Jacobian = Jacobian * (0.5/epsilon);
                         %display(Jacobian)
+                        if (c > current_threshold)
+                            error *= sqrt(current_threshold / c);
+                            c = current_threshold;
+                        endif
                         H += (Jacobian' * Jacobian);
                         b += (Jacobian' * error);
                         c += (error' * error);
+
                     endfor
 
-                    delta_x = -(pinv(H))*b * alpha;
-                    kinematic_parameters += delta_x;
+                    % if (c > kernel_threshold)
+                    %     error *= sqrt(kernel_threshold / c);
+                    %     c = kernel_threshold;
+                    % endif
 
-                    if c < prev_chi
-                        alpha = min(alpha * increase_factor, max_alpha);
-                    else
-                        alpha = max(alpha * decay_rate, min_alpha);
-                    endif
-                    
-                    prev_chi = c;
+                    delta_x = -(pinv(H))*b; # * alpha;
+                    kinematic_parameters += delta_x * alpha;
+
+                    % if c < prev_chi
+                    %     alpha = min(alpha * increase_factor, max_alpha);
+                    % else
+                    %     alpha = max(alpha * decay_rate, min_alpha);
+                    % endif
+                    alpha = max(alpha * decay_rate, min_alpha);
+                    #prev_chi = c;
                     display('Error')
                     display(c)
-
+                    display(iteration)
                     display('Calibrated Kinematic Parameters')
                     display(kinematic_parameters)
 
@@ -347,7 +362,7 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
             plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
             axis([-5 4 -4 2]);
             title ("batches - xy trajectory of Laser wrt baselink");    
-            pause(5)
+            pause(2)
         endfor       
 endfunction
 
@@ -363,7 +378,7 @@ calibrated_front_pose = robot_config_f(initial_state, max_enc_values, U, kinemat
 calibrated_pose_laser = laser(kinematic_parameters, calibrated_front_pose);
 #xy
 plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
-axis([-5 10 -10 10]);
+axis([-5 4 -4 2]);
 title ("batches - xy trajectory of Laser wrt baselink");
 pause(5);
 #theta
