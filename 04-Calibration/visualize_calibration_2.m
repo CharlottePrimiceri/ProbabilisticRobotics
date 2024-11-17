@@ -181,6 +181,7 @@ indices = (1:2434)';
 num_kin = length(kinematic_parameters);
 dataset_size = size(U, 1);
 steer_v = 0;
+
 ####################### GROUND TRUTH ##############################
 % plot(U(:,7), U(:,8),-'o'); 
 % axis([-5 4 -4 2]);
@@ -221,171 +222,126 @@ function angle_difference = angle_normalization(theta_1, theta_2)
     angle_difference = mod(difference + pi, 2 * pi) - pi;
 endfunction
 
-#try not to use separated functions and put all together in the main
 
 ############ LEAST SQUARES FOR BATCHES ############
-function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U)
-        #in this way the error converge to a very high value
-        initial_lr = 0.9;   #0.7 non male
+function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_iteration, dataset_size, num_kin, steer_v, U)
+        #Initialize learning rate
+        initial_lr = 0.9;   
         alpha = initial_lr;
-        decay_rate=0.9;    #0.8 non male
-        #increase_factor = 0.7;
+        decay_rate=0.9;    
         min_alpha = 1e-4;  
-        #max_alpha = 10.0;
-        #prev_chi = inf;
+
+        #Initialize Kernel
         kernel_threshold = 1; 
         final_threshold = 1e-1; 
-        threshold_decay = (kernel_threshold  - final_threshold) / 70;
-        for iteration = 1:70
+        threshold_decay = (kernel_threshold  - final_threshold) / n_iteration;
+
+        for iteration = 1:n_iteration
             current_threshold = kernel_threshold - iteration * threshold_decay;
             current_threshold = max(current_threshold, final_threshold);
-            for batch = 0:(n_batch-1)
-                if batch == 0 || batch == 1
-                    T_pred_all = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
-                    laser_pred_all = laser(kinematic_parameters, T_pred_all);
 
-                    # Divide in batches
-                    first_value = ((batch*batch_size)+1); 
-                    last_value = (batch+1)*batch_size; 
-                    # Consider the last 4 values of the dataset and for the last batch
-                    if batch == 9
-                        last_value = size(U,1);
-                    endif
-                    % display(first_value)
-                    % display(last_value)
-                    laser_all_kin_plus = [];
-                    laser_all_kin_minus = [];
+            T_pred_all = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
+            laser_pred_all = laser(kinematic_parameters, T_pred_all);
 
-                    U_batch = U(first_value:last_value, :);
-                    size_batch = size(U_batch, 1);
-                    # reinitialize at each batch the steering angle
-                    if batch == 0
-                    steer_value = steer_v;
-                    else 
-                    steer_value = U((last_value - 1), 2);
-                    #display(steer_value)
-                    endif
 
-                    laser_pred_batch = laser_pred_all(first_value:last_value, :);
-                    
-                    # add perturbation
-                    perturbation = zeros(num_kin, 1);
-                    for i = 1:num_kin
-                        perturbation(i) = epsilon;
-                        
-                        # positive perturbation
-                        front_plus = robot_config_f(initial_state, max_enc_values, U(1:last_value, :), kinematic_parameters + perturbation, steer_v);
-                        laser_plus = laser(kinematic_parameters + perturbation, front_plus);
-                        # negative perturbation 
-                        front_minus = robot_config_f(initial_state, max_enc_values, U(1:last_value, :), kinematic_parameters - perturbation, steer_v);
-                        laser_minus = laser(kinematic_parameters - perturbation, front_minus);
-                        # remember to reset to zero this vector so to perturb only one parameter
-                        perturbation(i) = 0;
-                        # stack the predicted batch pertubed by one kinematic parameter at a time
-                        laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
-                        laser_all_kin_minus = [laser_all_kin_minus;laser_minus];
-                        #display(size(laser_all_kin_plus));
-                    endfor    
+            laser_all_kin_plus = [];
+            laser_all_kin_minus = [];
+            
+            # add perturbation
+            perturbation = zeros(num_kin, 1);
+            for i = 1:num_kin
+                perturbation(i) = epsilon;
                 
-                    delta_x = zeros(num_kin);
-                    H = zeros(num_kin, num_kin);
-                    b = zeros(num_kin, 1);
-                    c = 0;
+                # positive perturbation
+                front_plus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters + perturbation, steer_v);
+                laser_plus = laser(kinematic_parameters + perturbation, front_plus);
+                # negative perturbation 
+                front_minus = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters - perturbation, steer_v);
+                laser_minus = laser(kinematic_parameters - perturbation, front_minus);
+                # remember to reset to zero this vector so to perturb only one parameter
+                perturbation(i) = 0;
+                # stack the predicted dataset pertubed by one kinematic parameter at a time
+                laser_all_kin_plus = [laser_all_kin_plus;laser_plus];
+                laser_all_kin_minus = [laser_all_kin_minus;laser_minus];
+                #display(size(laser_all_kin_plus));
+            endfor    
+        
+            delta_x = zeros(num_kin);
+            H = zeros(num_kin, num_kin);
+            b = zeros(num_kin, 1);
+            c = 0;
 
-                    for i=1:size_batch 
-                        # Compute Error
-                        error = zeros(3,1);
-                        pred = laser_pred_batch(i, :); 
-                        meas = U_batch(i, 7:9);
-                        error(1:2, 1) = pred(:, 1:2) - meas(:, 1:2);
-                        error(3, 1) = angle_normalization(pred(:, 3), meas(:, 3)); 
-                        %display(size(error))
-                        # Compute Jacobian 
-                        Jacobian = zeros(3, 7);
-                        first_k_laser_value = first_value;
-                        for k=1:num_kin
-                            last_k_laser_value = (first_k_laser_value + size_batch)-1; 
-                            %display(first_k_laser_value)
-                            %display(last_k_laser_value)
-                            # Prepare the perturbated batches for each of the current kinematic parameter considered
-                            laser_all_kin_plus_k = laser_all_kin_plus(first_k_laser_value:last_k_laser_value, :); 
-                            laser_plus_i = laser_all_kin_plus_k(i, :);
+            for i=1:dataset_size
 
-                            laser_all_kin_minus_k = laser_all_kin_minus(first_k_laser_value:last_k_laser_value, :);
-                            laser_minus_i = laser_all_kin_minus_k(i, :);
+                # Compute Error
+                error = zeros(3,1);
+                pred = laser_pred_all(i, :); 
+                meas = U(i, 7:9);
+                error(1:2, 1) = pred(:, 1:2) - meas(:, 1:2);
+                error(3, 1) = angle_normalization(pred(:, 3), meas(:, 3)); 
 
-                            Jacobian(1:2, k) = (laser_plus_i(:, 1:2)) - (laser_minus_i(:, 1:2));
-                            Jacobian(3, k) = angle_normalization(laser_plus_i(:, 3), laser_minus_i(:, 3));
+                # Compute Jacobian 
+                Jacobian = zeros(3, 7);
+                first_k_laser_value = 1;
+                for k=1:num_kin
+                    last_k_laser_value = (first_k_laser_value + dataset_size)-1; 
 
-                            first_k_laser_value += last_value; 
+                    # Prepare the perturbated dataset for each of the current kinematic parameter considered
+                    laser_all_kin_plus_k = laser_all_kin_plus(first_k_laser_value:last_k_laser_value, :); 
+                    laser_plus_i = laser_all_kin_plus_k(i, :);
 
-                        endfor
-                        # scale the gradient
-                        Jacobian = Jacobian * (0.5/epsilon);
-                        %display(Jacobian)
-                        if (c > current_threshold)
-                            error *= sqrt(current_threshold / c);
-                            c = current_threshold;
-                        endif
-                        H += (Jacobian' * Jacobian);
-                        b += (Jacobian' * error);
-                        c += (error' * error);
+                    laser_all_kin_minus_k = laser_all_kin_minus(first_k_laser_value:last_k_laser_value, :);
+                    laser_minus_i = laser_all_kin_minus_k(i, :);
 
-                    endfor
+                    Jacobian(1:2, k) = (laser_plus_i(:, 1:2)) - (laser_minus_i(:, 1:2));
+                    Jacobian(3, k) = angle_normalization(laser_plus_i(:, 3), laser_minus_i(:, 3));
 
-                    delta_x = -(pinv(H))*b; 
-                    kinematic_parameters += delta_x * alpha;
+                    first_k_laser_value += dataset_size; 
 
-                    alpha = max(alpha * decay_rate, min_alpha);
-    
-                    display('Error')
-                    display(c)
-                    display(iteration)
-                    display('Calibrated Kinematic Parameters')
-                    display(kinematic_parameters)
+                endfor
+                # scale the gradient
+                Jacobian = Jacobian * (0.5/epsilon);
 
+                # Robust Estimator
+                if (c > current_threshold)
+                    error *= sqrt(current_threshold / c);
+                    c = current_threshold;
                 endif
-            endfor 
+
+                H += (Jacobian' * Jacobian);
+                b += (Jacobian' * error);
+                c += (error' * error);
+
+            endfor
+
+            delta_x = -(pinv(H))*b; 
+            #Add learning rate
+            kinematic_parameters += delta_x * alpha;
+            #Update lr
+            alpha = max(alpha * decay_rate, min_alpha);
+
+            display('Error')
+            display(c)
+            display(iteration)
+            display('Calibrated Kinematic Parameters')
+            display(kinematic_parameters)
+
             calibrated_front_pose = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
             calibrated_pose_laser = laser(kinematic_parameters, calibrated_front_pose);
             #xy
             plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
             axis([-5 4 -4 2]);
-            title ("batches - xy trajectory of Laser wrt baselink");    
+            title ("Calibrate- xy trajectory of Laser wrt baselink");    
             pause(2)
         endfor       
 endfunction
 
-#######  1 iteration of LS algorithm on dataset divided in 10 batches
+####### Calibrated 2D Laser Pose Trajectory + Calibrated kinematic parameters after 70 iterations of LS ########
 epsilon = 1e-04;
-#n_batch = 10;
-#batch_size = floor(dataset_size / n_batch); #243 for 10 batches
-batch_size = 2434; 
-kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, 1, batch_size, num_kin, steer_v, U);
+dataset_size = 2434; 
+n_iteration=70;
+kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_iteration, dataset_size, num_kin, steer_v, U);
 
-#Calibrated 2D Laser Pose Trajectory after 1 LS on batches
-calibrated_front_pose = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
-calibrated_pose_laser = laser(kinematic_parameters, calibrated_front_pose);
-#xy
-plot(calibrated_pose_laser(:,1),calibrated_pose_laser(:,2),-'o');
-axis([-5 4 -4 2]);
-title ("batches - xy trajectory of Laser wrt baselink");
-pause(5);
-#theta
-% plot(indices, calibrated_pose_laser(:,3),-'o');
-% axis([-2 2434 -5 5]);
-% title ("batches - theta values of Laser wrt baselink");
-% pause(5);
-
-####### more iteration of LS algorithm withcalibrated kinematic parameters found with the least squares on batches
-
-% epsilon = 1e-04;
-% n_batch = 1;
-% batch_size = floor(dataset_size / n_batch); #243 for 10 batches
-
-% for i=1:5
-%     kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_batch, batch_size, num_kin, steer_v, U);
-% endfor
 
 % ####################### CALIBRATED POSE ###########################
 % calibrated_front_pose_f = robot_config_f(initial_state, max_enc_values, U, kinematic_parameters, steer_v);
