@@ -223,7 +223,7 @@ function angle_difference = angle_normalization(theta_1, theta_2)
 endfunction
 
 
-############ LEAST SQUARES FOR BATCHES ############
+############ LEAST SQUARES WITH ROBUST KERNEL ############
 function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_iteration, dataset_size, num_kin, steer_v, U)
 
         #Initialize Kernel
