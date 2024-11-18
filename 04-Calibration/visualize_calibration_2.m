@@ -225,15 +225,10 @@ endfunction
 
 ############ LEAST SQUARES FOR BATCHES ############
 function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_values, initial_state, epsilon, n_iteration, dataset_size, num_kin, steer_v, U)
-        #Initialize learning rate
-        initial_lr = 0.9;   
-        alpha = initial_lr;
-        decay_rate=0.9;    
-        min_alpha = 1e-4;  
 
         #Initialize Kernel
         kernel_threshold = 1; 
-        final_threshold = 1e-1; 
+        final_threshold = 1e-2; 
         threshold_decay = (kernel_threshold  - final_threshold) / n_iteration;
 
         for iteration = 1:n_iteration
@@ -315,10 +310,9 @@ function kinematic_parameters = LeastSquares(kinematic_parameters, max_enc_value
             endfor
 
             delta_x = -(pinv(H))*b; 
-            #Add learning rate
-            kinematic_parameters += delta_x * alpha;
-            #Update lr
-            alpha = max(alpha * decay_rate, min_alpha);
+           
+            kinematic_parameters += delta_x;
+
 
             display('Error')
             display(c)
