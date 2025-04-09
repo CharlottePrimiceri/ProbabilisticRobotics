@@ -156,6 +156,10 @@ The final calibrated kinematic parameters:\
 
   <img src="https://github.com/CharlottePrimiceri/ProbabilisticRobotics/blob/main/04-Calibration/images/converged_theta_laser.png">
 
+The code is found in the visualize_calibration_2.m file.
+
+
+
   The application of the algorithm can be found in the LeastSquares() function.\
   All the main functions can be found in visualize_calibration.m and the v2t, t2v functions in the utilities in tools. 
 
